@@ -7,17 +7,21 @@ import { Search, X } from "lucide-react";
 import PeerTubeFiltersComp, { PeerTubeFiltersRef } from "@/components/PeerTube/PeerTubeFilters";
 import type { PeerTubeFilters } from "@/app/types";
 
+interface PeertubeSearchFiltersProps {
+  isPeertubePage: boolean;
+  isPeertubeFiltersOpen: boolean;
+  setIsPeertubeFiltersOpen: (open: boolean) => void;
+  peertubeFiltersRef: React.RefObject<PeerTubeFiltersRef | null>;
+  searchTerm: string;
+}
+
 function PeertubeSearchFilters({
   isPeertubePage,
   isPeertubeFiltersOpen,
   setIsPeertubeFiltersOpen,
   peertubeFiltersRef,
-}: {
-  isPeertubePage: boolean;
-  isPeertubeFiltersOpen: boolean;
-  setIsPeertubeFiltersOpen: (open: boolean) => void;
-  peertubeFiltersRef: React.RefObject<PeerTubeFiltersRef | null>;
-}) {
+  searchTerm,
+}: PeertubeSearchFiltersProps) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const t = useTranslations("peertube.filters");
@@ -34,10 +38,10 @@ function PeertubeSearchFilters({
       }
     });
     const queryString = filterParams.toString();
-    const currentSearch = searchParams.get('search') || '';
+    const currentSearch = searchTerm || searchParams.get('search') || '';
     router.push(`/peertube?search=${encodeURIComponent(currentSearch)}${queryString ? `&${queryString}` : ''}`);
     setIsPeertubeFiltersOpen(false);
-  }, [router, searchParams, setIsPeertubeFiltersOpen]);
+  }, [router, searchParams, setIsPeertubeFiltersOpen, searchTerm]);
 
   if (!isPeertubePage || !isPeertubeFiltersOpen) return null;
 
@@ -181,6 +185,7 @@ if (isFreeTvPage) {
           isPeertubeFiltersOpen={isPeertubeFiltersOpen}
           setIsPeertubeFiltersOpen={setIsPeertubeFiltersOpen}
           peertubeFiltersRef={peertubeFiltersRef}
+          searchTerm={searchTerm}
         />
       </Suspense>
     </div>
