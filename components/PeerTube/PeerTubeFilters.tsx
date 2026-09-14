@@ -301,7 +301,7 @@ export default forwardRef<PeerTubeFiltersRef, Props>(function PeerTubeFilters({ 
   }));
 
   return (
-    <div className="w-full max-w-xs px-4 pt-4 pb-6 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden">
+    <div className="w-full px-4 pt-4 pb-6 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t("title")}</h2>
         <div className="flex items-center gap-3">
