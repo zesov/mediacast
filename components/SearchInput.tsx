@@ -42,7 +42,7 @@ function PeertubeSearchFilters({
   if (!isPeertubePage || !isPeertubeFiltersOpen) return null;
 
   return (
-    <div className="absolute top-full right-0 z-50 mt-1 min-w-250 max-w-[calc(100vw-2rem)] bg-white dark:bg-gray-900 p-0 max-h-[80vh] overflow-y-auto">
+    <div className="absolute top-full left-0 right-0 sm:right-0 sm:left-auto z-50 mt-1 w-full sm:w-auto sm:min-w-250 max-w-none sm:max-w-[calc(100vw-2rem)] max-h-[60vh] overflow-y-auto bg-white dark:bg-gray-900 p-0 sm:max-h-[80vh]">
       <PeerTubeFiltersComp
         ref={peertubeFiltersRef}
         initialFilters={{
@@ -160,7 +160,11 @@ if (isFreeTvPage) {
         <input
           ref={searchInputRef}
           type="search"
-          className="focus:ring-indigo-500 focus:border-indigo-500 block w-full min-w-[280px] pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md leading-5 bg-white dark:bg-gray-900 placeholder-gray-500 sm:text-sm"
+          inputMode="search"
+          autoCapitalize="off"
+          autoCorrect="off"
+          spellCheck={false}
+          className="focus:ring-indigo-500 focus:border-indigo-500 block w-full min-w-0 flex-1 pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md leading-5 bg-white dark:bg-gray-900 placeholder-gray-500 sm:text-sm"
           placeholder={placeholder}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}

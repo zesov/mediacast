@@ -113,12 +113,7 @@ export default function PeerTubePage({ initialVideos, initialTotal = 0, searchTe
     }
   }, [mergedFilters, t]);
 
-  // Run search on mount if searchTerm is provided
-  useEffect(() => {
-    if (searchTerm) {
-      runSearch(searchTerm);
-    }
-  }, [searchTerm, runSearch]);
+  // Server provides initialVideos via props; no need to re-fetch on mount
 
   const handleSelect = (video: PeerTubeVideo) => {
     setSelected(video);

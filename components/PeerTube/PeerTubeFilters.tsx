@@ -116,12 +116,12 @@ function Select({ label, value, options, onChange, t, className = "" }: {
   className?: string;
 }) {
   return (
-    <div className={`mb-4 ${className}`}>
+    <div className={`mb-3 ${className}`}>
       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t(label)}</label>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 dark:text-gray-100"
+        className="w-full px-3 py-3 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 dark:text-gray-100 min-h-[44px] text-base"
       >
         {options.map((opt) => (
           <option key={opt.value} value={opt.value}>
@@ -142,18 +142,18 @@ function RadioGroup({ label, value, options, onChange, t, className = "" }: {
   className?: string;
 }) {
   return (
-    <div className={`mb-4 ${className}`}>
+    <div className={`mb-3 ${className}`}>
       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t(label)}</label>
-      <div className="flex flex-wrap gap-4">
+      <div className="flex flex-wrap gap-3">
         {options.map((opt) => (
-          <label key={opt.value} className="flex items-center gap-2 cursor-pointer">
+          <label key={opt.value} className="flex items-center gap-2 cursor-pointer min-h-[44px]">
             <input
               type="radio"
               name={label}
               value={opt.value}
               checked={value === opt.value}
               onChange={() => onChange(opt.value)}
-              className="h-4 w-4 text-indigo-600 dark:text-indigo-400 border-gray-300 dark:border-gray-700 focus:ring-indigo-500"
+              className="h-5 w-5 text-indigo-600 dark:text-indigo-400 border-gray-300 dark:border-gray-700 focus:ring-indigo-500"
             />
             <span className="text-sm text-gray-700 dark:text-gray-300">{t(opt.labelKey)}</span>
           </label>
@@ -186,16 +186,16 @@ function MultiTagInput({ label, value, onChange, placeholder, t, className = "" 
     }
   };
   return (
-    <div className={`mb-4 ${className}`}>
+    <div className={`mb-3 ${className}`}>
       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t(label)}</label>
       <div className="flex flex-wrap gap-2 mb-2">
         {value.map((tag) => (
-          <span key={tag} className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded text-sm text-gray-700 dark:text-gray-300">
+          <span key={tag} className="inline-flex items-center gap-1 px-3 py-2 bg-gray-100 dark:bg-gray-800 rounded text-sm text-gray-700 dark:text-gray-300 min-h-[44px]">
             {tag}
             <button
               type="button"
               onClick={() => onChange(value.filter((t) => t !== tag))}
-              className="ml-1 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+              className="ml-2 h-5 w-5 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 flex items-center justify-center"
             >
               ✕
             </button>
@@ -209,12 +209,12 @@ function MultiTagInput({ label, value, onChange, placeholder, t, className = "" 
           onChange={(e) => setInputValue(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
-          className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 dark:text-gray-100"
+          className="flex-1 px-3 py-3 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 dark:text-gray-100 min-h-[44px]"
         />
         <button
           type="button"
           onClick={handleAdd}
-          className="px-3 py-2 bg-indigo-600 dark:bg-indigo-500 text-white rounded-lg hover:bg-indigo-700 text-sm"
+          className="px-4 py-3 bg-indigo-600 dark:bg-indigo-500 text-white rounded-lg hover:bg-indigo-700 text-sm min-h-[44px] flex items-center"
         >
           {t("addTag")}
         </button>
@@ -232,14 +232,14 @@ function TextInput({ label, value, onChange, placeholder, t, className = "" }: {
   className?: string;
 }) {
   return (
-    <div className={`mb-4 ${className}`}>
+    <div className={`mb-3 ${className}`}>
       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t(label)}</label>
       <input
         type="text"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 dark:text-gray-100"
+        className="w-full px-3 py-3 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 dark:text-gray-100 min-h-[44px] text-base"
       />
     </div>
   );
@@ -301,7 +301,7 @@ export default forwardRef<PeerTubeFiltersRef, Props>(function PeerTubeFilters({ 
   }));
 
   return (
-    <div className="w-full p-4 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800">
+    <div className="w-full max-w-xs px-4 pt-4 pb-6 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t("title")}</h2>
         <div className="flex items-center gap-3">
@@ -322,7 +322,7 @@ export default forwardRef<PeerTubeFiltersRef, Props>(function PeerTubeFilters({ 
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 gap-3">
         {/* Sort by */}
         <Select
           label="sortBy"
