@@ -154,3 +154,12 @@ cp .env.example .env       # Create environment file (add PODCAST_INDEX_KEY)
 - **Playback tracking**: Requires DENO_KV_URL and DENO_KV_TOKEN for production; uses memory fallback in development
 - **PeerTube security**: Content is loaded via sandboxed iframe with strict CSP in PeerTubeVideo element
 - **Live TV stability**: Free-TV/IPTV streams may be unreliable - app handles connection errors gracefully
+
+## Important
+- 使用frontend-design skills
+- omo Delegated tasks任务分配10秒超时无反应后，用主agent直接执行
+- TDD测试优先开发模式优先
+- 不要自动 git commit，要由user明确提出先commit
+
+### browse playwright
+- 直接使用bash命令 uvx playwright 

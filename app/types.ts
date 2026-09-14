@@ -71,8 +71,8 @@ export interface PeerTubeSearchResponse {
  * PeerTube search filter state (one-to-one with the SepiaSearch filters).
  */
 export interface PeerTubeFilters {
-  /** 排序：-match 最佳匹配 / -publishedAt 最新 / publishedAt 最旧 */
-  sort: "-match" | "-publishedAt" | "publishedAt";
+  /** 排序：-match 最佳匹配 / -hot 最热 / -publishedAt 最新 / publishedAt 最旧 */
+  sort: "-match" | "-hot" | "-publishedAt" | "publishedAt";
   /** 显示敏感内容：null 未设置，true 是，false 否 */
   nsfw: boolean | null;
   /** 结果类型：videos / channels / playlists */
@@ -94,12 +94,14 @@ export interface PeerTubeFilters {
   licenceOneOf: string;
   /** 语言代码（"any" 表示全部） */
   languageOneOf: string;
-  /** “包含所有这些标签” */
+  /** "包含所有这些标签" */
   tagsAllOf: string[];
-  /** “包含其中任一标签” */
+  /** "包含其中任一标签" */
   tagsOneOf: string[];
   /** PeerTube 实例 host */
   host: string;
+  /** 优先语言列表（如 ["zh", "en"]） */
+  boostLanguages?: string[];
 }
 
 

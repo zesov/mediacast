@@ -15,6 +15,7 @@
       "title": "Filters",
       "sortBy": "Sort by",
       "bestMatch": "Best match",
+      "hot": "Hot",
       "mostRecent": "Most recent",
       "leastRecent": "Least recent",
       "sensitiveContent": "Display sensitive content",

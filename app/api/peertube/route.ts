@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import type { PeerTubeSearchResponse, PeerTubeVideo } from "@/app/types";
 
-const SEPIA_BASE = "https://sepiasearch.org/api/v1/search/videos";
+const SEPIA_BASE = "https://sepiasearch.org/api/v1/search/videos"; // SepiaSearch base URL for PeerTube videos
 
 interface SepiaRawVideo {
   uuid: string;
@@ -53,7 +53,7 @@ export async function GET(request: NextRequest) {
     const rawSearch = (searchParams.get("search") || "").trim();
     const start = parseInt(searchParams.get("start") || "0", 10) || 0;
     const count = Math.min(
-      parseInt(searchParams.get("count") || "12", 10) || 12,
+      parseInt(searchParams.get("count") || "6", 10) || 6,
       48,
     );
 
@@ -61,8 +61,11 @@ export async function GET(request: NextRequest) {
       start: String(start),
       count: String(count),
       searchTarget: "search-index",
-      sort: searchParams.get("sort") || "-publishedAt",
+      sort: searchParams.get("sort") || "-hot",
+      nsfw: "false",
     });
+    qs.append("boostLanguages", "zh");
+    qs.append("boostLanguages", "en");
     if (rawSearch) {
       qs.set("search", rawSearch);
     }
@@ -81,11 +84,14 @@ export async function GET(request: NextRequest) {
       "tagsAllOf",
       "tagsOneOf",
       "host",
+      "boostLanguages",
     ];
     for (const key of filterParams) {
       const value = searchParams.get(key);
       if (value) qs.set(key, value);
     }
+
+    console.log(`Fetching PeerTube videos from SepiaSearch: ${SEPIA_BASE}?${qs.toString()}`);
 
     const res = await fetch(`${SEPIA_BASE}?${qs.toString()}`, {
       headers: { Accept: "application/json" },

@@ -15,7 +15,7 @@ interface Props {
 }
 
 const DEFAULT_FILTERS: PeerTubeFiltersType = {
-  sort: "-match",
+  sort: "-hot",
   nsfw: null,
   resultType: "videos",
   isLive: null,
@@ -27,6 +27,7 @@ const DEFAULT_FILTERS: PeerTubeFiltersType = {
   tagsAllOf: [],
   tagsOneOf: [],
   host: "",
+  boostLanguages: undefined,
 };
 
 function filtersToQueryParams(filters: Partial<PeerTubeFiltersType>): URLSearchParams {
@@ -96,7 +97,7 @@ export default function PeerTubePage({ initialVideos, initialTotal = 0, searchTe
     setError("");
     try {
       const filterParams = filtersToQueryParams(mergedFilters);
-      const baseUrl = `/api/peertube?search=${encodeURIComponent(query)}&start=0&count=12`;
+      const baseUrl = `/api/peertube?search=${encodeURIComponent(query)}&start=0&count=6`;
       const fullUrl = `${baseUrl}&${filterParams.toString()}`;
 
       const res = await fetch(fullUrl);

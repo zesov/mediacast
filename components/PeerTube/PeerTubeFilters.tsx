@@ -15,6 +15,7 @@ interface Props {
 
 const SORT_OPTIONS = [
   { value: "-match", labelKey: "bestMatch" },
+  { value: "-hot", labelKey: "hot" },
   { value: "-publishedAt", labelKey: "mostRecent" },
   { value: "publishedAt", labelKey: "leastRecent" },
 ];
@@ -249,8 +250,8 @@ export default forwardRef<PeerTubeFiltersRef, Props>(function PeerTubeFilters({ 
 
   // Initialize filter state from initialFilters or defaults
   const [filters, setFilters] = useState<Partial<PeerTubeFilters>>({
-    sort: "-match",
-    nsfw: null,
+    sort: "-hot",
+    nsfw: false,
     resultType: "videos",
     isLive: null,
     publishedDateRange: "any_published_date",
@@ -261,6 +262,7 @@ export default forwardRef<PeerTubeFiltersRef, Props>(function PeerTubeFilters({ 
     tagsAllOf: [],
     tagsOneOf: [],
     host: "",
+    boostLanguages: ["zh", "en"],
     ...initialFilters,
   });
 
@@ -270,8 +272,8 @@ export default forwardRef<PeerTubeFiltersRef, Props>(function PeerTubeFilters({ 
 
   const handleReset = useCallback(() => {
     const defaults: Partial<PeerTubeFilters> = {
-      sort: "-match",
-      nsfw: null,
+      sort: "-hot",
+      nsfw: false,
       resultType: "videos",
       isLive: null,
       publishedDateRange: "any_published_date",
@@ -282,6 +284,7 @@ export default forwardRef<PeerTubeFiltersRef, Props>(function PeerTubeFilters({ 
       tagsAllOf: [],
       tagsOneOf: [],
       host: "",
+      boostLanguages: ["zh", "en"],
     };
     setFilters(defaults);
   }, []);

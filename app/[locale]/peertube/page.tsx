@@ -72,7 +72,7 @@ export default async function PeerTubeHome({ params, searchParams }: Props) {
       }
     });
     const queryString = filterParams.toString();
-    const url = `${await buildBaseUrl()}/api/peertube?search=${encodeURIComponent(searchTerm)}&start=0&count=12${queryString ? `&${queryString}` : ''}`;
+    const url = `${await buildBaseUrl()}/api/peertube?search=${encodeURIComponent(searchTerm)}&start=0&count=6${queryString ? `&${queryString}` : ''}`;
     const res = await fetch(url, { cache: "no-store" });
     if (res.ok) {
       initial = (await res.json()) as PeerTubeSearchResponse;
