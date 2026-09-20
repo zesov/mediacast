@@ -7,7 +7,15 @@
     "latestUpdate": "最新更新",
     "topEpisodes": "热门单集排行",
     "recommended": "为你推荐",
-    "hotCategories": "热门分类"
+    "hotCategories": "热门分类",
+    "favoritesTitle": "我的收藏",
+    "favoritesEmpty": "暂无收藏",
+    "favoritesRemove": "移除",
+    "topPodcastsAddToFavorites": "添加到收藏",
+    "topPodcastsRemoveFromFavorites": "从收藏移除",
+    "podcast": "播客",
+    "liveTV": "直播",
+    "peertube": "PeerTube"
   },
   "categoryNames": {
     "history": "历史",
@@ -26,5 +34,15 @@
   "episode": {
     "loading": "加载中…",
     "allEpisodes": "全部剧集"
+  },
+  "topPodcasts": {
+    "addToFavorites": "添加到收藏",
+    "removeFromFavorites": "从收藏移除",
+    "favorites": "我的收藏"
+  },
+  "favorites": {
+    "title": "我的收藏",
+    "empty": "暂无收藏",
+    "remove": "移除"
   }
 }

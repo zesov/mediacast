@@ -1,6 +1,8 @@
 "use client";
+import { useState, useEffect, useCallback, type MouseEvent } from "react";
 import { useTranslations } from "next-intl";
 import type { PeerTubeVideo } from "@/app/types";
+import { toggleFavorite, isFavorite } from "@/lib/favoritesStore";
 
 function formatDuration(seconds: number): string {
   if (!seconds || isNaN(seconds)) return "";
@@ -32,6 +34,26 @@ interface Props {
 
 export default function PeerTubeVideoCard({ video, active, onSelect }: Props) {
   const t = useTranslations("peertube.videoCard");
+  const [isFav, setIsFav] = useState(false);
+
+  useEffect(() => {
+    isFavorite('peertube', video.uuid).then(setIsFav);
+  }, [video.uuid]);
+
+  const handleToggleFavorite = useCallback(async (e: MouseEvent) => {
+    e.stopPropagation();
+    const fav = await toggleFavorite({
+      type: 'peertube',
+      id: video.uuid,
+      title: video.name,
+      description: '',
+      image: video.previewUrl || video.thumbnailUrl,
+      previewUrl: video.previewUrl,
+      uuid: video.uuid,
+      addedAt: Date.now(),
+    });
+    setIsFav(fav);
+  }, [video.uuid, video.name, video.previewUrl, video.thumbnailUrl]);
 
   return (
     <button
@@ -56,6 +78,21 @@ export default function PeerTubeVideoCard({ video, active, onSelect }: Props) {
             {formatDuration(video.duration)}
           </span>
         )}
+        <div
+          onClick={handleToggleFavorite}
+          className="absolute top-2 right-2 p-1 rounded-full bg-black/50 hover:bg-black/70 text-white transition-colors cursor-pointer"
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              handleToggleFavorite(e as never);
+            }
+          }}
+          aria-label={isFav ? "Remove from favorites" : "Add to favorites"}
+        >
+          <i className={`fas fa-star ${isFav ? 'text-yellow-400' : ''}`}></i>
+        </div>
       </div>
       <div className="p-3">
         <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100 line-clamp-2 group-hover:text-indigo-600">

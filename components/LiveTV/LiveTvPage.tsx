@@ -1,6 +1,7 @@
 'use client';
 import React, { useCallback, useEffect, useRef, useState, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
+import { usePathname } from 'next/navigation';
 import { EpgSlot } from './liveChannels';
 import { FreeTVChannel } from '@/lib/freeTvParser';
 import LiveTvPlayer from './LiveTvPlayer';
@@ -11,6 +12,7 @@ import { useM3UChannels } from '@/hooks/useM3UChannels';
 import { useDirectStream } from '@/hooks/useDirectStream';
 import { M3UChannel } from '@/lib/m3uParser';
 import { isYoutubeUrl } from '@/lib/youtube';
+import { addFavorite, removeFavorite, isFavorite, getFavoritesByType } from '@/lib/favoritesStore';
 
 type TabType = 'builtin' | 'm3u' | 'direct';
 
@@ -48,23 +50,62 @@ export default function LiveTvPage() {
   const [showAllCategories, setShowAllCategories] = useState(false);
   const [builtinChannels, setBuiltinChannels] = useState<FreeTVChannel[]>([]);
   const [builtinCategories, setBuiltinCategories] = useState<string[]>([]);
-  const visibleCategories = useMemo(() => {
-    if (showAllCategories) return builtinCategories;
-    return shuffle([...builtinCategories]).slice(0, 6);
-  }, [builtinCategories, showAllCategories]);
+  const pathname = usePathname();
   const [loading, setLoading] = useState(false);
   const [searchInput, setSearchInput] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [activeEpg, setActiveEpg] = useState<EpgSlot[]>([]);
   const [activeChannel, setActiveChannel] = useState<FreeTVChannel | M3UChannel | null>(null);
-  const [favorites, setFavorites] = useState<Set<string>>(() => {
-    if (typeof window === 'undefined') return new Set();
-    try {
-      return new Set(JSON.parse(localStorage.getItem('live:favorites') || '[]'));
-    } catch {
-      return new Set();
+  const visibleCategories = useMemo(() => {
+    if (showAllCategories) return builtinCategories;
+    return shuffle([...builtinCategories]).slice(0, 6);
+  }, [builtinCategories, showAllCategories]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('favorite') === 'true') {
+      setActiveCategory('favorite');
     }
-  });
+    const active = params.get('active');
+    if (active && builtinChannels.length) {
+      const channel = builtinChannels.find((c) => c.id === active);
+      if (channel) {
+        setActiveChannel(channel);
+      }
+    }
+  }, [builtinChannels, pathname]);
+  const [favorites, setFavorites] = useState<Set<string>>(() => new Set());
+
+  // One-time migration from localStorage to IndexedDB
+  useEffect(() => {
+    const raw = localStorage.getItem('live:favorites');
+    if (raw) {
+      try {
+        const ids = JSON.parse(raw) as string[];
+        if (ids.length) {
+          localStorage.removeItem('live:favorites');
+          ids.forEach((id) => {
+            addFavorite({
+              type: 'live',
+              id,
+              title: id,
+              description: '',
+              addedAt: Date.now(),
+            });
+          });
+        }
+      } catch {
+        // ignore corrupted data
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    getFavoritesByType('live').then((items) => {
+      setFavorites(new Set(items.map((item) => item.id as string)));
+    });
+  }, []);
   const [directUrl, setDirectUrl] = useState<string | null>(null);
   // YouTube live 用官方 iframe 播放（替代 hls.js）
   const [youtubeEmbed, setYoutubeEmbed] = useState<{ channelId: string; embedUrl: string } | null>(null);
@@ -127,15 +168,34 @@ export default function LiveTvPage() {
   }, [searchInput]);
 
   // 收藏切换
-  const toggleFavorite = useCallback((id: string) => {
-    setFavorites((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      localStorage.setItem('live:favorites', JSON.stringify([...next]));
-      return next;
-    });
-  }, []);
+  const toggleFavorite = useCallback(async (id: string) => {
+    const type = 'live';
+    const currentlyFavorited = await isFavorite(type, id);
+    if (currentlyFavorited) {
+      await removeFavorite(type, id);
+      setFavorites((prev) => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
+    } else {
+      const channel = builtinChannels.find((c) => c.id === id) || m3u.channels.find((c) => c.id === id);
+      await addFavorite({
+        type,
+        id,
+        title: channel?.name || id,
+        description: '',
+        image: channel?.logo,
+        streamUrl: '',
+        addedAt: Date.now(),
+      });
+      setFavorites((prev) => {
+        const next = new Set(prev);
+        next.add(id);
+        return next;
+      });
+    }
+  }, [builtinChannels, m3u.channels]);
 
   // 频道数据：启动时一次性加载，All 分类按过期时间决定是否刷新
   useEffect(() => {

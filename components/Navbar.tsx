@@ -32,34 +32,35 @@ export default function Navbar() {
     <nav className="bg-white dark:bg-gray-900 dark:border-b dark:border-gray-800 shadow-sm sticky top-0 z-10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
-          <div className="flex items-center">
-            <div className="flex-shrink-0 flex items-center">
-              <Link href="/" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center">
-                <Podcast className="text-gray-600 dark:text-gray-400 text-2xl mr-2" aria-hidden="true" />
-                <span className="font-semibold text-xl">{t('brand')}</span>
-              </Link>
-            </div>
-            <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
-              {[ 
-                { href: '/', key: 'browse', exact: true, label: t('browse') },
-                { href: '/live', key: 'live', exact: false, label: t('live') },
-                { href: '/peertube', key: 'peertube', exact: false, label: t('peertube') },
-              ].map(({ href, key, exact, label }) => (
-                <Link 
-                  key={key}
-                  href={href}
-                  className={`
-                    ${exact ? (pathname === href ? 'border-indigo-500' : 'border-transparent') : 
-                      (pathname?.startsWith(href) ? 'border-indigo-500' : 'border-transparent')}
-                    text-gray-900 dark:text-gray-100 hover:border-gray-300 dark:hover:border-gray-700 hover:text-gray-700 dark:hover:text-gray-200 
-                    inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium
-                  `}
-                >
-                  {label}
+<div className="flex items-center">
+              <div className="flex-shrink-0 flex items-center">
+                <Link href="/" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center">
+                  <Podcast className="text-gray-600 dark:text-gray-400 text-2xl mr-2" aria-hidden="true" />
+                  <span className="font-semibold text-xl">{t('brand')}</span>
                 </Link>
-              ))}
+              </div>
+              <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
+                {[ 
+                  { href: '/', key: 'browse', exact: true, label: t('browse') },
+                  { href: '/live', key: 'live', exact: false, label: t('live') },
+                  { href: '/peertube', key: 'peertube', exact: false, label: t('peertube') },
+                  { href: '/favorites', key: 'favorites', exact: false, label: t('favorites') },
+                ].map(({ href, key, exact, label }) => (
+                  <Link 
+                    key={key}
+                    href={href}
+                    className={`
+                      ${exact ? (pathname === href ? 'border-indigo-500' : 'border-transparent') : 
+                        (pathname?.startsWith(href) ? 'border-indigo-500' : 'border-transparent')}
+                      text-gray-900 dark:text-gray-100 hover:border-gray-300 dark:hover:border-gray-700 hover:text-gray-700 dark:hover:text-gray-200 
+                      inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium
+                    `}
+                  >
+                    {label}
+                  </Link>
+                ))}
+              </div>
             </div>
-          </div>
           {/* 桌面端右侧控件 */}
           <div className="hidden sm:ml-6 sm:flex sm:items-center sm:space-x-4">
             <SearchInput
@@ -113,8 +114,9 @@ export default function Navbar() {
           <div className="px-4 pt-2 pb-3 space-y-1">
             {[ 
               { href: '/', key: 'browse', exact: true, label: t('browse') },
-              { href: '/peertube', key: 'peertube', exact: false, label: t('peertube') },
               { href: '/live', key: 'live', exact: false, label: t('live') },
+              { href: '/peertube', key: 'peertube', exact: false, label: t('peertube') },
+              { href: '/favorites', key: 'favorites', exact: false, label: t('favorites') },
             ].map(({ href, key, exact, label }) => (
               <Link
                 key={key}

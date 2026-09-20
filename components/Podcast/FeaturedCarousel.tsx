@@ -1,33 +1,72 @@
-import React, { useState } from 'react';
-// @ts-ignore
+import React, { useState, useEffect } from 'react';
+// @ts-expect-error react-slick does not ship TypeScript declarations
 import Slider from 'react-slick';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
 import {FeaturedItem} from '../../app/types';
 import { useEpisode } from '../../app/contexts/EpisodeContext';
+import { useTranslations } from 'next-intl';
+import { addFavorite, removeFavorite, getFavorites, type FavoriteType } from '@/lib/favoritesStore';
+
+function createFavorite(item: FeaturedItem) {
+  return {
+    type: 'podcast' as FavoriteType,
+    id: item.id,
+    title: item.title,
+    description: item.description,
+    image: item.image,
+    lastUpdateTime: item.lastUpdateTime,
+    newestItemPublishTime: item.newestItemPublishTime,
+    addedAt: Date.now(),
+  };
+}
 
 const FeaturedCarousel = ({ featuredItems }: {featuredItems: FeaturedItem[]}) => {
-  // 手动控制幻灯片索引
+  const t = useTranslations('home');
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [favorites, setFavorites] = useState<Set<number>>(new Set());
 
-  // 配置react-slick参数
+  useEffect(() => {
+    getFavorites().then((list) => {
+      setFavorites(new Set(list.map((item) => item.id as number)));
+    });
+  }, []);
+
+  const handleToggleFavorite = async (item: FeaturedItem) => {
+    if (favorites.has(item.id)) {
+      await removeFavorite('podcast', item.id);
+      setFavorites((prev) => {
+        const next = new Set(prev);
+        next.delete(item.id);
+        return next;
+      });
+    } else {
+      await addFavorite(createFavorite(item));
+      setFavorites((prev) => {
+        const next = new Set(prev);
+        next.add(item.id);
+        return next;
+      });
+    }
+  };
+
   const sliderSettings = {
     dots: false,
-    infinite: true,        // 无限循环
-    speed: 500,           // 滑动速度（毫秒）
-    slidesToShow: 3,      // 同时显示1张
-    slidesToScroll: 1,    // 每次滑动1张
-    arrows: true,         // 显示左右箭头
-    autoplay: false,      // 关闭自动播放（纯手动）
-    beforeChange: (oldIndex: number, newIndex: number) => setCurrentSlide(newIndex), // 更新当前索引
-    appendDots: (dots: any) => (
+    infinite: true,
+    speed: 500,
+    slidesToShow: 3,
+    slidesToScroll: 1,
+    arrows: true,
+    autoplay: false,
+    beforeChange: (oldIndex: number, newIndex: number) => setCurrentSlide(newIndex),
+    appendDots: (dots: React.ReactElement[]) => (
       <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2">
         {dots}
       </div>
     ),
     customPaging: (i:number) => (
-      <button 
-        type="button" 
+      <button
+        type="button"
         className={`w-3 h-3 rounded-full ${i === currentSlide ? 'bg-white dark:bg-gray-900' : 'bg-gray-500'}`}
       />
     ),
@@ -38,11 +77,11 @@ const FeaturedCarousel = ({ featuredItems }: {featuredItems: FeaturedItem[]}) =>
         },
         {
           breakpoint: 768,
-          settings: { slidesToShow: 2, centerPadding: "30px" } // 小屏幕减小间距
+          settings: { slidesToShow: 2, centerPadding: "30px" }
         },
         {
           breakpoint: 480,
-          settings: { slidesToShow: 1, centerPadding: "20px" } // 超小屏幕进一步减小间距
+          settings: { slidesToShow: 1, centerPadding: "20px" }
         }
       ],
   };
@@ -66,6 +105,13 @@ const FeaturedCarousel = ({ featuredItems }: {featuredItems: FeaturedItem[]}) =>
                 alt={item.title}
                 className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
               />
+              <button
+                className={`absolute top-2 right-2 w-8 h-8 rounded-full flex items-center justify-center ${favorites.has(item.id) ? 'bg-yellow-400 text-white' : 'bg-gray-800 bg-opacity-60 text-white hover:bg-opacity-80'}`}
+                onClick={() => handleToggleFavorite(item)}
+                aria-label={favorites.has(item.id) ? t('topPodcastsRemoveFromFavorites') : t('topPodcastsAddToFavorites')}
+              >
+                <i className={`fas fa-star ${favorites.has(item.id) ? 'text-yellow-300' : 'text-white'}`}></i>
+              </button>
               {/* 播放按钮（悬停显示） */}
               <button className="absolute bottom-4 right-4 w-10 h-10 bg-indigo-600 dark:bg-indigo-500 hover:bg-indigo-700 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200"
                  onClick={() => handleClick(item)}

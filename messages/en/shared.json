@@ -9,7 +9,8 @@
     "searchPlaceholder": "Search podcasts, episodes or creators",
     "liveSearchPlaceholder": "Search live channels by name, category...",
     "switchToDark": "Switch to dark mode",
-    "switchToLight": "Switch to light mode"
+    "switchToLight": "Switch to light mode",
+    "favorites": "Favorites"
   },
   "footer": {
     "explore": "Explore",

@@ -9,7 +9,8 @@
     "searchPlaceholder": "搜索播客、单集或创作者",
     "liveSearchPlaceholder": "搜索直播频道（名称、分类...）",
     "switchToDark": "切换到深色模式",
-    "switchToLight": "切换到浅色模式"
+    "switchToLight": "切换到浅色模式",
+    "favorites": "我的收藏"
   },
   "footer": {
     "explore": "探索",

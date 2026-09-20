@@ -7,7 +7,15 @@
     "latestUpdate": "Latest update",
     "topEpisodes": "Top Episodes",
     "recommended": "Recommended for you",
-    "hotCategories": "Hot Categories"
+    "hotCategories": "Hot Categories",
+    "favoritesTitle": "Favorites",
+    "favoritesEmpty": "No favorites yet",
+    "favoritesRemove": "Remove",
+    "topPodcastsAddToFavorites": "Add to favorites",
+    "topPodcastsRemoveFromFavorites": "Remove from favorites",
+    "podcast": "Podcasts",
+    "liveTV": "Live TV",
+    "peertube": "PeerTube"
   },
   "categoryNames": {
     "history": "History",
@@ -26,5 +34,15 @@
   "episode": {
     "loading": "Loading…",
     "allEpisodes": "All Episodes"
+  },
+  "topPodcasts": {
+    "addToFavorites": "Add to favorites",
+    "removeFromFavorites": "Remove from favorites",
+    "favorites": "Favorites"
+  },
+  "favorites": {
+    "title": "Favorites",
+    "empty": "No favorites yet",
+    "remove": "Remove"
   }
 }
