@@ -3,7 +3,7 @@ import type { MetadataRoute } from "next";
 // PWA manifest：由 Next.js 自动生成 /manifest.webmanifest
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "MediaCast",
+    name: "MediaC",
     short_name: "MediaC",
     description: "Podcast & Live TV Player",
     start_url: "/en",
