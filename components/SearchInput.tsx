@@ -3,7 +3,7 @@ import { useState, useRef, useEffect, useCallback, Suspense } from "react";
 import { useTranslations } from "next-intl";
 import { usePathname, useRouter } from "@/i18n/navigation";
 import { useSearchParams } from "next/navigation";
-import { Search, X } from "lucide-react";
+import { Search } from "lucide-react";
 import PeerTubeFiltersComp, { PeerTubeFiltersRef } from "@/components/PeerTube/PeerTubeFilters";
 import type { PeerTubeFilters } from "@/app/types";
 
@@ -24,7 +24,6 @@ function PeertubeSearchFilters({
 }: PeertubeSearchFiltersProps) {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const t = useTranslations("peertube.filters");
 
   const handleApplyFilters = useCallback((filters: Partial<PeerTubeFilters>) => {
     const filterParams = new URLSearchParams();
@@ -110,7 +109,7 @@ export default function SearchInput({
   }, [dropdownRef]);
 
   const handleKeyDown = useCallback(
-    (event: React.KeyboardEvent, currentFilters?: any) => {
+    (event: React.KeyboardEvent, currentFilters?: Partial<PeerTubeFilters>) => {
       if (event.key === "Enter") {
         event.preventDefault();
         if (!searchTerm.trim()) return;
@@ -139,11 +138,11 @@ if (isFreeTvPage) {
         const queryString = filterParams.toString();
         router.push(`/peertube?search=${encodeURIComponent(term)}${queryString ? `&${queryString}` : ''}`);
       } else {
-        router.push(`/podcast/?tag=${encodeURIComponent(term)}`);
+        router.push(`/podcast/?search=${encodeURIComponent(term)}`);
       }
       }
     },
-    [searchTerm, isLivePage, isPeertubePage, peertubeFiltersRef, router]
+    [searchTerm, isLivePage, isFreeTvPage, isPeertubePage, peertubeFiltersRef, router]
   );
 
   const placeholder =

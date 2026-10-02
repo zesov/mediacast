@@ -44,5 +44,18 @@
     "title": "Favorites",
     "empty": "No favorites yet",
     "remove": "Remove"
+  },
+  "search": {
+    "heading": "Search results for “{term}”",
+    "tagHeading": "Podcasts tagged “{tag}”",
+    "trendingHeading": "Trending podcasts",
+    "count": "{count} results",
+    "by": "by",
+    "latestUpdate": "Latest update",
+    "noResults": "No podcasts matched “{term}”.",
+    "noResultsHint": "Try a different keyword, or browse a category from the home page.",
+    "play": "Play latest episode",
+    "addFavorite": "Add {title} to favorites",
+    "removeFavorite": "Remove {title} from favorites"
   }
 }

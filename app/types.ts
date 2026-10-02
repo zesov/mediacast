@@ -15,6 +15,15 @@ export interface TopPodcast {
   duration?: string;
   image?: string; 
   lastUpdateTime: number;
+  /** 频道作者（`search/byterm` 返回） */
+  author?: string;
+  /** 频道所有者名（`search/byterm` 返回） */
+  ownerName?: string;
+  /** Podcast Index 返回的 "categoryId: Name" 映射表 */
+  categories?: Record<string, string> | null;
+  /** 频道级图片，可能比 image 更清晰 */
+  artwork?: string;
+  language?: string;
 }
 
 export interface Episode {

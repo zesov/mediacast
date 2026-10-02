@@ -44,5 +44,18 @@
     "title": "我的收藏",
     "empty": "暂无收藏",
     "remove": "移除"
+  },
+  "search": {
+    "heading": "“{term}” 的搜索结果",
+    "tagHeading": "分类为“{tag}”的节目",
+    "trendingHeading": "热门节目",
+    "count": "{count} 个结果",
+    "by": "作者",
+    "latestUpdate": "最新更新",
+    "noResults": "没有找到与“{term}”相关的节目。",
+    "noResultsHint": "换个关键词试试，或回到首页按分类浏览。",
+    "play": "播放最新一集",
+    "addFavorite": "收藏 {title}",
+    "removeFavorite": "取消收藏 {title}"
   }
 }

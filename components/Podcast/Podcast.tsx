@@ -1,16 +1,28 @@
 'use client';
 import Head from 'next/head'
-import Navbar from '../Navbar'
-import FeaturedSection from './FeaturedSection'
-import CategorySection from './CategorySection'
+import { useTranslations } from 'next-intl';
+import type { TopPodcast } from '@/app/types';
 import TopPodcasts from './TopPodcasts'
-import TopEpisodes from './TopEpisodes'
+import SearchResults from './SearchResults'
 import Player from '../Player'
-import Recommended from './Recommended'
-import Categories from './Categories'
 import Footer from '../Footer'
 
-export default function PodcastPage({feeds,topPodcasts,recentEpisodes,episodesRandom,categories}: any) {
+interface Props {
+  feeds: TopPodcast[];
+  searchTerm?: string;
+  tag?: string;
+}
+
+export default function PodcastPage({ feeds, searchTerm, tag }: Props) {
+  const t = useTranslations('search');
+
+  const heading = searchTerm
+    ? t('heading', { term: searchTerm })
+    : tag
+    ? t('tagHeading', { tag })
+    : t('trendingHeading');
+
+  const isSearch = Boolean(searchTerm);
 
   return (
     <>
@@ -25,14 +37,15 @@ export default function PodcastPage({feeds,topPodcasts,recentEpisodes,episodesRa
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className="flex flex-col lg:flex-row gap-6">
           <div className="lg:w-2/3">
-            <TopPodcasts data={feeds}/>
-            {/* <TopEpisodes items={recentEpisodes.items}/> */}
+            {isSearch ? (
+              <SearchResults feeds={feeds} heading={heading} />
+            ) : (
+              <TopPodcasts data={feeds} />
+            )}
           </div>
 
           <div className="lg:w-1/3">
             <Player />
-            {/* <Recommended items={episodesRandom.episodes}/> */}
-            {/* <Categories items={categories.feeds}/> */}
           </div>
         </div>
       </div>
