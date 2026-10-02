@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useSyncExternalStore } from 'react';
 import { useTranslations } from 'next-intl';
 import { Link, usePathname, useRouter } from '@/i18n/navigation';
 import { Podcast, Menu, X, Sun, Moon } from 'lucide-react';
@@ -17,6 +17,13 @@ export default function Navbar() {
   const [isPeertubeFiltersOpen, setIsPeertubeFiltersOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
+  // 避免 hydration mismatch：SSR 时 resolvedTheme 未解析，客户端首帧必须与 HTML 一致
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
+
   // 切换语言（保持当前路径，仅替换语言前缀）
   const switchLocale = (locale: string) => {
     router.replace(pathname, { locale });
@@ -26,7 +33,9 @@ export default function Navbar() {
     setTheme(resolvedTheme === 'dark' ? 'light' : 'dark');
   };
 
-  const themeLabel = resolvedTheme === 'dark' ? t('switchToLight') : t('switchToDark');
+  // mounted 前与服务端渲染保持一致（Moon + switchToDark），mount 后再反映真实主题
+  const isDark = mounted && resolvedTheme === 'dark';
+  const themeLabel = isDark ? t('switchToLight') : t('switchToDark');
 
   return (
     <nav className="bg-white dark:bg-gray-900 dark:border-b dark:border-gray-800 shadow-sm sticky top-0 z-10">
@@ -75,7 +84,7 @@ export default function Navbar() {
               title={themeLabel}
               className="p-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
             >
-              {resolvedTheme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+              {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
             </button>
 
             {/* 语言切换 */}
@@ -144,7 +153,7 @@ export default function Navbar() {
                 title={themeLabel}
                 className="p-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
               >
-                {resolvedTheme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+                {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
               </button>
               <button
                 onClick={() => switchLocale('zh')}

@@ -10,6 +10,8 @@ interface EpisodeContextType {
   setCurrentEpisode: (episode: Episode | null) => void;
   toPlay: boolean;
   setToPlay: (toPlay: boolean) => void;
+  isPlaying: boolean;
+  setIsPlaying: (isPlaying: boolean) => void;
 }
 
 const EpisodeContext = createContext<EpisodeContextType | undefined>(undefined);
@@ -18,6 +20,7 @@ export function EpisodeProvider({ children }: { children: ReactNode }) {
   const [episodes, setEpisodes] = useState<Episode[]>([]);
   const [currentEpisode, setCurrentEpisode] = useState<Episode | null>(null);
   const [toPlay, setToPlay] = useState<boolean>(false);
+  const [isPlaying, setIsPlaying] = useState<boolean>(false);
 
   return (
     <EpisodeContext.Provider value={{ 
@@ -26,7 +29,9 @@ export function EpisodeProvider({ children }: { children: ReactNode }) {
       currentEpisode, 
       setCurrentEpisode,
       toPlay,
-      setToPlay
+      setToPlay,
+      isPlaying,
+      setIsPlaying,
     }}>
       {children}
     </EpisodeContext.Provider>

@@ -7,6 +7,7 @@ import { useTranslations } from 'next-intl';
 import Player from '../Player';
 import { useRouter } from 'next/navigation';
 import { useInfiniteReveal } from '@/hooks/useInfiniteReveal';
+import { Play, Pause } from 'lucide-react';
 
 interface Podcast {
   id: string;
@@ -30,11 +31,8 @@ export default function EpisodePage({id}: {id:number}) {
   const episodeId = id;
   const router = useRouter();
 
-  const { currentEpisode, setCurrentEpisode, episodes, setEpisodes, setToPlay } = useEpisode();
+  const { currentEpisode, setCurrentEpisode, episodes, setEpisodes, setToPlay, isPlaying } = useEpisode();
   const [podcast, setPodcast] = useState<Podcast | null>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(0);
   const { visibleCount, hasMore, revealMore, sentinelRef } = useInfiniteReveal(podcast?.episodes.length ?? 0);
 
   const handleClick = async (item: Episode) => {
@@ -49,14 +47,6 @@ export default function EpisodePage({id}: {id:number}) {
       setCurrentEpisode(episodes[0]);
     });
   }, [episodeId]);
-
-  // 播放控制函数
-  const togglePlay = () => setIsPlaying(!isPlaying);
-  const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newTime = parseInt(e.target.value);
-    setCurrentTime(newTime);
-    // 实际应用中应该更新音频元素的当前时间
-  };
 
   if (!podcast || !currentEpisode) {
     return <div className="flex justify-center items-center min-h-screen">{t('loading')}</div>;
@@ -154,10 +144,21 @@ export default function EpisodePage({id}: {id:number}) {
                       <p className="text-gray-700 dark:text-gray-300 line-clamp-2">{episode.description}</p>
                     </div>
                     
-                    <button className="flex-shrink-0 text-gray-400 dark:text-gray-500 hover:text-gray-600">
-                      <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" />
-                      </svg>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (currentEpisode?.id === episode.id && isPlaying) {
+                          // 暂停当前播放中的剧集（Player 监听原生 pause 事件同步状态）
+                          document.querySelector<HTMLAudioElement>('audio.episode-player-audio')?.pause();
+                          return;
+                        }
+                        handleClick(episode);
+                      }}
+                      aria-label={currentEpisode?.id === episode.id && isPlaying ? t('pause', { title: episode.title }) : t('play', { title: episode.title })}
+                      title={currentEpisode?.id === episode.id && isPlaying ? t('pause', { title: episode.title }) : t('play', { title: episode.title })}
+                      className="h-12 w-12 shrink-0 rounded-full bg-indigo-600 text-white shadow-sm transition-colors hover:bg-indigo-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 flex items-center justify-center dark:bg-indigo-500 dark:hover:bg-indigo-600"
+                    >
+                      {currentEpisode?.id === episode.id && isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
                     </button>
                   </div>
                 </div>

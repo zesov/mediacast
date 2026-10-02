@@ -35,7 +35,9 @@
     "loading": "Loading…",
     "allEpisodes": "All Episodes",
     "count": "{shown} of {total} episodes",
-    "loadMore": "Load more"
+    "loadMore": "Load more",
+    "play": "Play {title}",
+    "pause": "Pause {title}"
   },
   "topPodcasts": {
     "addToFavorites": "Add to favorites",

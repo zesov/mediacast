@@ -35,7 +35,9 @@
     "loading": "加载中…",
     "allEpisodes": "全部剧集",
     "count": "{shown} / {total} 集",
-    "loadMore": "加载更多"
+    "loadMore": "加载更多",
+    "play": "播放 {title}",
+    "pause": "暂停 {title}"
   },
   "topPodcasts": {
     "addToFavorites": "添加到收藏",

@@ -20,9 +20,8 @@ const defaultEpisode: Episode = {
 };
 
 export default function Player({ title = true }: { title?: boolean }) {
-  const t = useTranslations('player');
-  const { currentEpisode: contextEpisode, toPlay, setToPlay } = useEpisode();
-  const [isPlaying, setIsPlaying] = useState(false);
+const t = useTranslations('player');
+  const { currentEpisode: contextEpisode, toPlay, setToPlay, isPlaying, setIsPlaying } = useEpisode();
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(0.7);
@@ -69,23 +68,23 @@ export default function Player({ title = true }: { title?: boolean }) {
   }, [volume, isMuted, stopTracking]);
 
   // 播放/暂停切换
-  const togglePlayPause = async () => {
+  const togglePlayPause = () => {
     const audio = audioRef.current;
     if (!audio) return;
 
     if (isPlaying) {
       audio.pause();
     } else {
-      // Start tracking on first play
+      // 首次播放才记录，不 await：网络请求会消耗用户手势窗口导致 play() 被拦截，
+      // 播放状态由原生 play/pause 事件同步（见上方事件监听）
       if (!hasStartedRef.current) {
         hasStartedRef.current = true;
-        await startTracking({ title: currentEpisode.title });
+        startTracking({ title: currentEpisode.title });
       }
       audio.play().catch(error => {
         console.error(t("playbackFailed"), error);
       });
     }
-    setIsPlaying(!isPlaying);
   };
 
   // 心跳定时器
@@ -97,6 +96,7 @@ export default function Player({ title = true }: { title?: boolean }) {
     if (!audio) return;
 
     const handlePlay = () => {
+      setIsPlaying(true);
       if (heartbeatIntervalRef.current) return;
       heartbeatIntervalRef.current = setInterval(() => {
         if (!audio.paused && !audio.ended) {
@@ -106,6 +106,7 @@ export default function Player({ title = true }: { title?: boolean }) {
     };
 
     const handlePause = () => {
+      setIsPlaying(false);
       if (heartbeatIntervalRef.current) {
         clearInterval(heartbeatIntervalRef.current);
         heartbeatIntervalRef.current = null;
@@ -217,6 +218,7 @@ export default function Player({ title = true }: { title?: boolean }) {
         ref={audioRef}
         src={currentEpisode.enclosureUrl}
         preload="metadata"
+        className="episode-player-audio"
       />
 
 {/* 播放器界面 */}
