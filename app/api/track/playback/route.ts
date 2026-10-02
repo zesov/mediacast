@@ -5,11 +5,13 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { hashIp, getClientIp, parseUserAgent, getCountry, generateSessionId } from '@/lib/privacy';
+import { isAdminRequest } from '@/lib/security';
 import {
   createPlaybackSession,
   updatePlaybackSession,
   endPlaybackSession,
   incrementPlayCount,
+  getPlaybackSession,
   type PlaybackSession,
 } from '@/lib/analytics';
 
@@ -40,6 +42,15 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     if (!['peertube', 'podcast', 'live'].includes(contentType)) {
       return NextResponse.json(
         { error: 'Invalid contentType. Must be: peertube, podcast, or live' },
+        { status: 400 }
+      );
+    }
+
+    // contentId is used verbatim in storage keys; an unbounded value would let a
+    // caller mint unlimited keys and inflate play counts for arbitrary content.
+    if (typeof contentId !== 'string' || contentId.length === 0 || contentId.length > 200) {
+      return NextResponse.json(
+        { error: 'contentId must be a non-empty string of at most 200 characters' },
         { status: 400 }
       );
     }
@@ -109,15 +120,20 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
             { status: 400 }
           );
         }
-        
-        // Get session to calculate duration
-        const sessionKey = ['playback', contentType, contentId, sessionId] as const;
-        
-        // Use the provided duration or calculate from startedAt
-        const playbackDuration = duration || Math.round((now - (currentTime || now)) / 1000);
-        
+
+        // Prefer the client's duration; otherwise derive it from the stored
+        // startedAt. currentTime is a playhead offset in seconds, not a
+        // timestamp, so it cannot be subtracted from `now`.
+        let playbackDuration = duration ?? 0;
+        if (duration === undefined) {
+          const session = await getPlaybackSession(contentType, contentId, sessionId);
+          if (session) {
+            playbackDuration = Math.max(0, Math.round((now - session.startedAt) / 1000));
+          }
+        }
+
         await endPlaybackSession(contentType, contentId, sessionId, now, playbackDuration);
-        
+
         return NextResponse.json({ success: true });
       }
       
@@ -136,14 +152,20 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   }
 }
 
-// Optional: GET for debugging/analytics dashboard
+// Optional: GET for debugging/analytics dashboard.
+// action=count is public (a bare number). stats and sessions return visitor-level
+// records — hashed IP, user agent, referrer — and require ADMIN_TOKEN.
 export async function GET(request: NextRequest): Promise<NextResponse> {
   try {
     const { searchParams } = new URL(request.url);
     const contentType = searchParams.get('contentType') as 'peertube' | 'podcast' | 'live' | null;
     const contentId = searchParams.get('contentId');
     const action = searchParams.get('action') || 'count';
-    
+
+    if (action !== 'count' && !isAdminRequest(request.headers)) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
     if (action === 'stats') {
       const { getGlobalStats } = await import('@/lib/analytics');
       const stats = await getGlobalStats();

@@ -98,7 +98,7 @@ export async function GET(request: NextRequest) {
     // 优先拉取 channel 所属国家的 EPG 档案（如 HK channel → epg_ripper_HK1.xml.gz）
     const prioritizedUrls = prioritizeEpgUrls(channel.tvgUrl, channel.country);
     const epgData = await fetchEpg(prioritizedUrls);
-    let programs: any[] = [];
+    const programs: any[] = [];
 
     for (const item of epgData) {
       if (item.rawXml) {
