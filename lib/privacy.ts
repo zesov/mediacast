@@ -8,7 +8,13 @@
  * Uses Web Crypto API (Edge runtime compatible)
  */
 export async function hashIp(ip: string, salt?: string): Promise<string> {
-  const secret = salt || process.env.IP_HASH_SALT || 'default-salt-change-in-production';
+  const secret = salt || process.env.IP_HASH_SALT;
+  if (!secret) {
+    throw new Error(
+      'IP_HASH_SALT is not set. A published default salt would let anyone reverse these hashes.'
+    );
+  }
+
   const data = `${ip}:${secret}`;
   
   const encoder = new TextEncoder();
@@ -32,21 +38,14 @@ export async function hashIp(ip: string, salt?: string): Promise<string> {
  * Extract client IP from request headers (Vercel/Cloudflare/standard)
  */
 export function getClientIp(request: Request): string {
-  // Vercel
   const forwarded = request.headers.get('x-forwarded-for');
   if (forwarded) {
     return forwarded.split(',')[0].trim();
   }
-  
-  // Cloudflare
-  const cfIp = request.headers.get('cf-connecting-ip');
-  if (cfIp) return cfIp;
-  
-  // Standard
-  const realIp = request.headers.get('x-real-ip');
-  if (realIp) return realIp;
-  
-  return 'unknown';
+
+  return request.headers.get('cf-connecting-ip')?.trim()
+    || request.headers.get('x-real-ip')?.trim()
+    || 'unknown';
 }
 
 /**

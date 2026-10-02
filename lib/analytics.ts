@@ -336,6 +336,17 @@ export async function endPlaybackSession(
     .commit();
 }
 
+export async function getPlaybackSession(
+  type: 'peertube' | 'podcast' | 'live',
+  contentId: string,
+  sessionId: string
+): Promise<PlaybackSession | null> {
+  const client = getClient();
+  const key = PlaybackKeys.session(type, contentId, sessionId);
+  const result = await client.get<PlaybackSession>(key);
+  return result.value ?? null;
+}
+
 /**
  * Get aggregate play count for content
  */
