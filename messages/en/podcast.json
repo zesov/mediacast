@@ -37,7 +37,9 @@
     "count": "{shown} of {total} episodes",
     "loadMore": "Load more",
     "play": "Play {title}",
-    "pause": "Pause {title}"
+    "pause": "Pause {title}",
+    "addToFavorites": "Add to favorites",
+    "removeFromFavorites": "Remove from favorites"
   },
   "topPodcasts": {
     "addToFavorites": "Add to favorites",

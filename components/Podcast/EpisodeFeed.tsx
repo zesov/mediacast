@@ -8,6 +8,7 @@ import Player from '../Player';
 import { useRouter } from 'next/navigation';
 import { useInfiniteReveal } from '@/hooks/useInfiniteReveal';
 import { Play, Pause } from 'lucide-react';
+import { addFavorite, removeFavorite, isFavorite, type FavoriteType } from '@/lib/favoritesStore';
 
 interface Podcast {
   id: string;
@@ -33,6 +34,7 @@ export default function EpisodePage({id}: {id:number}) {
 
   const { currentEpisode, setCurrentEpisode, episodes, setEpisodes, setToPlay, isPlaying } = useEpisode();
   const [podcast, setPodcast] = useState<Podcast | null>(null);
+  const [isFavorited, setIsFavorited] = useState(false);
   const { visibleCount, hasMore, revealMore, sentinelRef } = useInfiniteReveal(podcast?.episodes.length ?? 0);
 
   const handleClick = async (item: Episode) => {
@@ -47,6 +49,28 @@ export default function EpisodePage({id}: {id:number}) {
       setCurrentEpisode(episodes[0]);
     });
   }, [episodeId]);
+
+  useEffect(() => {
+    if (!podcast) return;
+    isFavorite('podcast', podcast.id).then(setIsFavorited);
+  }, [podcast]);
+
+  const handleToggleFavorite = async () => {
+    if (!podcast) return;
+    if (isFavorited) {
+      await removeFavorite('podcast', podcast.id);
+    } else {
+      await addFavorite({
+        type: 'podcast' as FavoriteType,
+        id: podcast.id,
+        title: podcast.title,
+        description: podcast.description,
+        image: podcast.image,
+        addedAt: Date.now(),
+      });
+    }
+    setIsFavorited(!isFavorited);
+  };
 
   if (!podcast || !currentEpisode) {
     return <div className="flex justify-center items-center min-h-screen">{t('loading')}</div>;
@@ -74,6 +98,14 @@ export default function EpisodePage({id}: {id:number}) {
                 </svg>
                 </button>
                 <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{podcast.title}</h1>
+                <button
+                  onClick={handleToggleFavorite}
+                  aria-label={isFavorited ? t('removeFromFavorites') : t('addToFavorites')}
+                  title={isFavorited ? t('removeFromFavorites') : t('addToFavorites')}
+                  className={`ml-2 p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors ${isFavorited ? 'text-yellow-500' : 'text-gray-400 hover:text-yellow-500'}`}
+                >
+                  <i className={`fas fa-star ${isFavorited ? '' : 'text-gray-400'}`}></i>
+                </button>
               </div>
             </div>
           </div>
