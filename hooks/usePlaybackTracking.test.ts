@@ -284,4 +284,123 @@ describe('usePlaybackTracking', () => {
       expect(id).toBeNull();
     });
   });
+
+  // These assert how many 'start' events were actually sent, not the
+  // isTracking flag. Asserting the flag let a real bug pass for a long time:
+  // it was a ref read during render, so it could never observe the live value.
+  const countEvents = (event: string): number =>
+    mockFetch.mock.calls.filter((call) =>
+      String((call[1] as { body?: string })?.body ?? '').includes(`"event":"${event}"`),
+    ).length;
+
+  it('recovers when startTracking is retried after a network failure', async () => {
+    mockFetch.mockRejectedValueOnce(new Error('Network error'));
+    const { result } = renderHook(() => usePlaybackTracking(defaultOptions));
+
+    await act(async () => {
+      await result.current.startTracking();
+    });
+    expect(countEvents('start')).toBe(1);
+
+    let retryId: string | null = null;
+    await act(async () => {
+      retryId = await result.current.startTracking();
+    });
+
+    expect(countEvents('start')).toBe(2);
+    expect(retryId).toBe('test-session-123');
+  });
+
+  it('recovers when startTracking is retried after a non-OK response', async () => {
+    mockFetch.mockResolvedValueOnce({ ok: false, status: 500 });
+    const { result } = renderHook(() => usePlaybackTracking(defaultOptions));
+
+    await act(async () => {
+      await result.current.startTracking();
+    });
+    expect(countEvents('start')).toBe(1);
+
+    await act(async () => {
+      await result.current.startTracking();
+    });
+
+    expect(countEvents('start')).toBe(2);
+  });
+
+  it('exposes isTracking=true after a successful start', async () => {
+    const { result } = renderHook(() => usePlaybackTracking(defaultOptions));
+
+    expect(result.current.isTracking).toBe(false);
+    await act(async () => {
+      await result.current.startTracking();
+    });
+
+    expect(result.current.isTracking).toBe(true);
+  });
+
+  it('exposes the sessionId assigned by the start response', async () => {
+    const { result } = renderHook(() => usePlaybackTracking(defaultOptions));
+
+    expect(result.current.sessionId).toBeNull();
+    await act(async () => {
+      await result.current.startTracking();
+    });
+
+    expect(result.current.sessionId).toBe('test-session-123');
+  });
+
+  it('resets isTracking back to false after stopTracking', async () => {
+    const { result } = renderHook(() => usePlaybackTracking(defaultOptions));
+
+    await act(async () => {
+      await result.current.startTracking();
+    });
+    await act(async () => {
+      await result.current.stopTracking(42);
+    });
+
+    expect(result.current.isTracking).toBe(false);
+  });
+
+  it('does not register any heartbeat interval of its own', async () => {
+    const setIntervalSpy = vi.spyOn(globalThis, 'setInterval');
+    const { result } = renderHook(() => usePlaybackTracking(defaultOptions));
+
+    await act(async () => {
+      await result.current.startTracking();
+    });
+
+    // The hook used to create a no-op setInterval on start that fired forever
+    // and did nothing. Heartbeats are the component's job.
+    expect(setIntervalSpy).not.toHaveBeenCalled();
+
+    // No interval belongs to this hook: the player owns the heartbeat cadence.
+    await act(async () => {
+      await result.current.stopTracking(10);
+    });
+    expect(setIntervalSpy).not.toHaveBeenCalled();
+
+    setIntervalSpy.mockRestore();
+  });
+
+  it('unmount cleanup sends an end event carrying the sessionId', async () => {
+    const { result, unmount } = renderHook(() => usePlaybackTracking(defaultOptions));
+
+    await act(async () => {
+      await result.current.startTracking();
+    });
+    mockFetch.mockClear();
+
+    await act(async () => {
+      unmount();
+    });
+
+    const endCalls = mockFetch.mock.calls.filter((call) =>
+      String((call[1] as { body?: string })?.body ?? '').includes('"event":"end"'),
+    );
+    expect(endCalls).toHaveLength(1);
+
+    const body = JSON.parse((endCalls[0][1] as { body: string }).body);
+    expect(body.sessionId).toBe('test-session-123');
+  });
 });

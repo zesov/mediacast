@@ -1,18 +1,13 @@
 'use client';
 
-/**
- * Client-side playback tracking hook
- * Handles start, heartbeat (every 30s), and end events
- */
-
-import { useRef, useCallback, useEffect } from 'react';
+import { useRef, useState, useCallback, useEffect } from 'react';
 
 interface UsePlaybackTrackingOptions {
   contentType: 'peertube' | 'podcast' | 'live';
   contentId: string;
   contentTitle?: string;
   enabled?: boolean;
-  heartbeatInterval?: number; // ms, default 30000
+  heartbeatInterval?: number;
 }
 
 interface UsePlaybackTrackingReturn {
@@ -28,112 +23,33 @@ export function usePlaybackTracking({
   contentId,
   contentTitle,
   enabled = true,
-  heartbeatInterval = 30000,
 }: UsePlaybackTrackingOptions): UsePlaybackTrackingReturn {
   const sessionIdRef = useRef<string | null>(null);
-  const heartbeatTimerRef = useRef<NodeJS.Timeout | null>(null);
   const isTrackingRef = useRef(false);
   const startedAtRef = useRef<number>(0);
 
-  // Send tracking event to API
-  const sendEvent = useCallback(async (
-    event: 'start' | 'heartbeat' | 'end',
-    extra?: { currentTime?: number; duration?: number; contentTitle?: string }
-  ) => {
-    if (!enabled) return;
-    
-    try {
-      await fetch('/api/track/playback', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          event,
-          contentType,
-          contentId,
-          contentTitle,
-          sessionId: sessionIdRef.current,
-          ...extra,
-        }),
-        // Don't block navigation
-        keepalive: event === 'end',
-      });
-    } catch (error) {
-      // Silently fail - tracking should never break playback
-      console.debug('Playback tracking failed:', error);
-    }
-  }, [enabled, contentType, contentId, contentTitle]);
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [isTracking, setIsTracking] = useState(false);
 
-  // Start tracking
-  const startTracking = useCallback(async (metadata?: { title?: string }) => {
-    if (!enabled || isTrackingRef.current) return null;
-    
+  const beginTracking = useCallback(() => {
     isTrackingRef.current = true;
+    setIsTracking(true);
     startedAtRef.current = Date.now();
-    
-    const title = metadata?.title || contentTitle;
-    await sendEvent('start', { contentTitle: title });
-    
-    // Start heartbeat
-    heartbeatTimerRef.current = setInterval(() => {
-      if (isTrackingRef.current && sessionIdRef.current) {
-        // We'll send currentTime from the component
-      }
-    }, heartbeatInterval);
-    
-    return sessionIdRef.current;
-  }, [enabled, contentTitle, sendEvent, heartbeatInterval]);
-
-  // Heartbeat - call with current playback position
-  const heartbeat = useCallback(async (currentTime: number) => {
-    if (!enabled || !isTrackingRef.current || !sessionIdRef.current) return;
-    
-    await sendEvent('heartbeat', { currentTime });
-  }, [enabled, sendEvent]);
-
-  // Stop tracking
-  const stopTracking = useCallback(async (duration?: number) => {
-    if (!enabled || !isTrackingRef.current) return;
-    
-    isTrackingRef.current = false;
-    
-    if (heartbeatTimerRef.current) {
-      clearInterval(heartbeatTimerRef.current);
-      heartbeatTimerRef.current = null;
-    }
-    
-    // Calculate duration if not provided
-    const playbackDuration = duration || Math.round((Date.now() - startedAtRef.current) / 1000);
-    
-    await sendEvent('end', { duration: playbackDuration });
-    
-    sessionIdRef.current = null;
-    startedAtRef.current = 0;
-  }, [enabled, sendEvent]);
-
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      if (isTrackingRef.current) {
-        stopTracking();
-      }
-    };
-  }, [stopTracking]);
-
-  // Expose sessionId setter for API response
-  const setSessionId = useCallback((id: string) => {
-    sessionIdRef.current = id;
   }, []);
 
-  // Return the hook interface
-  // We need to wrap startTracking to capture sessionId from response
-  const wrappedStartTracking = useCallback(async (metadata?: { title?: string }) => {
+  const endTracking = useCallback((newSessionId: string | null) => {
+    isTrackingRef.current = false;
+    setIsTracking(false);
+    sessionIdRef.current = newSessionId;
+    setSessionId(newSessionId);
+    startedAtRef.current = 0;
+  }, []);
+
+  const startTracking = useCallback(async (metadata?: { title?: string }) => {
     if (!enabled || isTrackingRef.current) return null;
-    
-    isTrackingRef.current = true;
-    startedAtRef.current = Date.now();
-    
-    const title = metadata?.title || contentTitle;
-    
+
+    beginTracking();
+
     try {
       const response = await fetch('/api/track/playback', {
         method: 'POST',
@@ -142,30 +58,25 @@ export function usePlaybackTracking({
           event: 'start',
           contentType,
           contentId,
-          contentTitle: title,
+          contentTitle: metadata?.title || contentTitle,
         }),
       });
-      
+
       const data = await response.json();
-      if (data.sessionId) {
-        sessionIdRef.current = data.sessionId;
-      }
-      
-      // Start heartbeat
-      heartbeatTimerRef.current = setInterval(() => {
-        // Heartbeat will be triggered by component
-      }, heartbeatInterval);
-      
-      return data.sessionId || null;
-    } catch (error) {
-      console.debug('Playback tracking start failed:', error);
+      const newSessionId = data.sessionId ?? null;
+      sessionIdRef.current = newSessionId;
+      setSessionId(newSessionId);
+
+      return newSessionId;
+    } catch {
+      endTracking(null);
       return null;
     }
-  }, [enabled, contentType, contentId, contentTitle, heartbeatInterval]);
+  }, [enabled, contentType, contentId, contentTitle, beginTracking, endTracking]);
 
-  const wrappedHeartbeat = useCallback(async (currentTime: number) => {
+  const heartbeat = useCallback(async (currentTime: number) => {
     if (!enabled || !isTrackingRef.current || !sessionIdRef.current) return;
-    
+
     try {
       await fetch('/api/track/playback', {
         method: 'POST',
@@ -178,23 +89,21 @@ export function usePlaybackTracking({
           currentTime,
         }),
       });
-    } catch (error) {
-      console.debug('Playback tracking heartbeat failed:', error);
+    } catch {
+      // Tracking must never interrupt playback.
     }
-  }, [enabled, contentType, contentId, heartbeatInterval]);
+  }, [enabled, contentType, contentId]);
 
-  const wrappedStopTracking = useCallback(async (duration?: number) => {
-    if (!enabled || !isTrackingRef.current || !sessionIdRef.current) return;
-    
-    isTrackingRef.current = false;
-    
-    if (heartbeatTimerRef.current) {
-      clearInterval(heartbeatTimerRef.current);
-      heartbeatTimerRef.current = null;
-    }
-    
-    const playbackDuration = duration || Math.round((Date.now() - startedAtRef.current) / 1000);
-    
+  const stopTracking = useCallback(async (duration?: number) => {
+    if (!enabled || !isTrackingRef.current) return;
+
+    const playbackDuration = duration ?? Math.round((Date.now() - startedAtRef.current) / 1000);
+    const finishedSessionId = sessionIdRef.current;
+
+    endTracking(null);
+
+    if (!finishedSessionId) return;
+
     try {
       await fetch('/api/track/playback', {
         method: 'POST',
@@ -203,24 +112,23 @@ export function usePlaybackTracking({
           event: 'end',
           contentType,
           contentId,
-          sessionId: sessionIdRef.current,
+          sessionId: finishedSessionId,
           duration: playbackDuration,
         }),
         keepalive: true,
       });
-    } catch (error) {
-      console.debug('Playback tracking end failed:', error);
+    } catch {
+      // keepalive requests can be dropped by navigation; nothing to recover.
     }
-    
-    sessionIdRef.current = null;
-    startedAtRef.current = 0;
-  }, [enabled, contentType, contentId]);
+  }, [enabled, contentType, contentId, endTracking]);
 
-  return {
-    startTracking: wrappedStartTracking,
-    stopTracking: wrappedStopTracking,
-    heartbeat: wrappedHeartbeat,
-    sessionId: sessionIdRef.current,
-    isTracking: isTrackingRef.current,
-  };
+  useEffect(() => {
+    return () => {
+      if (isTrackingRef.current) {
+        void stopTracking();
+      }
+    };
+  }, [stopTracking]);
+
+  return { startTracking, stopTracking, heartbeat, sessionId, isTracking };
 }
