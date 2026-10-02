@@ -43,7 +43,7 @@ export default function LiveTvPage() {
   useEffect(() => {
     const saved = localStorage.getItem('live:activeTab') as TabType | null;
     if (saved && saved !== activeTab) setActiveTab(saved);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, []);
 
   const [activeCategory, setActiveCategory] = useState<string>('all');
@@ -235,7 +235,7 @@ export default function LiveTvPage() {
     return () => {
       stale = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [effectiveChannel?.id, activeTab]);
 
   const currentProgram = activeEpg.find((p) => now >= p.start && now < p.end);
