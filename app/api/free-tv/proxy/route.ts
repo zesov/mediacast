@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { assertPublicHttpUrl, safeFetch } from '@/lib/urlGuard';
+import { createRateLimiter, extractClientIp } from '@/lib/security';
 
 // 直播流代理：解决外部 IPTV 流源（Free-TV 等）不带 CORS 头导致浏览器端 hls.js 无法直连的问题。
 // 工作方式：
@@ -10,6 +11,50 @@ import { assertPublicHttpUrl, safeFetch } from '@/lib/urlGuard';
 //   4. TS/TS 片段等二进制直接透传。
 
 const MAX_DOWNLOAD_SIZE = 50 * 1024 * 1024; // 防御：单次响应不超过 50MB
+const MAX_PLAYLIST_SIZE = 4 * 1024 * 1024;
+
+const limiter = createRateLimiter({ limit: 120, windowMs: 60_000 });
+
+/**
+ * 读取响应体并在超过 limit 时中断。content-length 缺失或被伪造时，
+ * 唯一可靠的体积上限只能在读取过程中执行。
+ */
+async function readCapped(response: Response, limit: number): Promise<string | null> {
+  const declared = Number(response.headers.get('content-length') || 0);
+  if (declared > limit) return null;
+
+  if (!response.body) {
+    const text = await response.text();
+    return text.length > limit ? null : text;
+  }
+
+  const reader = response.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let received = 0;
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      received += value.byteLength;
+      if (received > limit) {
+        await reader.cancel();
+        return null;
+      }
+      chunks.push(value);
+    }
+  } finally {
+    reader.releaseLock();
+  }
+
+  const merged = new Uint8Array(received);
+  let offset = 0;
+  for (const chunk of chunks) {
+    merged.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return new TextDecoder().decode(merged);
+}
 
 // 若 URL 为相对路径则基于 base 解析为绝对地址
 function resolveUrl(u: string, base: string): string {
@@ -52,6 +97,10 @@ function isHlsContent(contentType: string | null, url: string): boolean {
 export async function GET(request: NextRequest) {
   const target = request.nextUrl.searchParams.get('url') || '';
 
+  if (!limiter.check(extractClientIp(request.headers))) {
+    return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 });
+  }
+
   try {
     assertPublicHttpUrl(target);
   } catch {
@@ -79,9 +128,12 @@ export async function GET(request: NextRequest) {
     const contentType = res.headers.get('content-type');
     const isPlaylist = isHlsContent(contentType, finalUrl);
 
-    // m3u8：读文本 → 重写 URL → 返回
     if (isPlaylist) {
-      const text = await res.text();
+      const text = await readCapped(res, MAX_PLAYLIST_SIZE);
+      if (text === null) {
+        return NextResponse.json({ error: 'playlist too large' }, { status: 413 });
+      }
+
       const rewritten = text
         .split('\n')
         .map((line) => rewriteLine(line, finalUrl))
@@ -95,12 +147,11 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // 二进制（TS 片段 / 密钥文件等）：直接透传
-    const total = Number(res.headers.get('content-length') || 0);
-    if (total > MAX_DOWNLOAD_SIZE) {
+    const buf = await readCapped(res, MAX_DOWNLOAD_SIZE);
+    if (buf === null) {
       return NextResponse.json({ error: 'response too large' }, { status: 413 });
     }
-    const buf = await res.arrayBuffer();
+
     return new NextResponse(buf, {
       headers: {
         'Content-Type': contentType || 'application/octet-stream',
@@ -108,10 +159,7 @@ export async function GET(request: NextRequest) {
         'Cache-Control': 'no-store',
       },
     });
-  } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'proxy failed' },
-      { status: 502 }
-    );
+  } catch {
+    return NextResponse.json({ error: 'proxy failed' }, { status: 502 });
   }
 }
