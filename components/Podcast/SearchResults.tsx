@@ -3,9 +3,9 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Play, Star } from 'lucide-react';
-import { useEpisode } from '@/app/contexts/EpisodeContext';
 import { categoryNames } from '@/lib/podcastSearch';
 import { useInfiniteReveal } from '@/hooks/useInfiniteReveal';
+import { usePlayFirstEpisode } from '@/hooks/usePlayFirstEpisode';
 import { addFavorite, removeFavorite, getFavorites } from '@/lib/favoritesStore';
 import type { TopPodcast } from '@/app/types';
 
@@ -29,8 +29,7 @@ function createFavorite(podcast: TopPodcast) {
 export default function SearchResults({ feeds, heading }: Props) {
   const t = useTranslations('search');
   const [favorites, setFavorites] = useState<Set<number>>(new Set());
-  const [pendingId, setPendingId] = useState<number | null>(null);
-  const { setCurrentEpisode, setToPlay } = useEpisode();
+  const { playFirstEpisode, pendingId, error } = usePlayFirstEpisode();
   const { visibleCount, hasMore, revealMore, sentinelRef } = useInfiniteReveal(feeds.length);
 
   useEffect(() => {
@@ -57,19 +56,6 @@ export default function SearchResults({ feeds, heading }: Props) {
     }
   };
 
-  const handlePlay = async (podcast: TopPodcast) => {
-    setPendingId(podcast.id);
-    try {
-      const res = await fetch(`/api/episodesByFeedId?id=${podcast.id}`);
-      const episodes = await res.json();
-      if (!Array.isArray(episodes) || episodes.length === 0) return;
-      setCurrentEpisode(episodes[0]);
-      setToPlay(true);
-    } finally {
-      setPendingId(null);
-    }
-  };
-
   if (feeds.length === 0) {
     return (
       <section className="mb-8 mt-8">
@@ -88,11 +74,13 @@ export default function SearchResults({ feeds, heading }: Props) {
         </span>
       </header>
 
+      {error && <p className="mt-3 text-sm text-red-600 dark:text-red-400">{error}</p>}
+
       <ul>
         {feeds.slice(0, visibleCount).map((podcast) => {
           const categories = categoryNames(podcast.categories);
           const isFavorite = favorites.has(podcast.id);
-          const isPending = pendingId === podcast.id;
+          const isPending = pendingId === String(podcast.id);
 
           return (
             <li
@@ -166,7 +154,7 @@ export default function SearchResults({ feeds, heading }: Props) {
                     <Star className={`h-5 w-5 ${isFavorite ? 'fill-amber-400 text-amber-400' : ''}`} />
                   </button>
                   <button
-                    onClick={() => handlePlay(podcast)}
+                    onClick={() => playFirstEpisode(String(podcast.id))}
                     disabled={isPending}
                     aria-label={t('play')}
                     title={t('play')}

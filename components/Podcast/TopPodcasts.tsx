@@ -1,9 +1,9 @@
 'use client';
 import {TopPodcast} from "../../app/types";
-import { useEpisode } from '../../app/contexts/EpisodeContext';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
+import { usePlayFirstEpisode } from '@/hooks/usePlayFirstEpisode';
 import { addFavorite, removeFavorite, getFavorites, type FavoriteType } from '@/lib/favoritesStore';
 
 function createFavorite(podcast: TopPodcast) {
@@ -47,16 +47,11 @@ export default function TopPodcasts({data}:{data:TopPodcast[]}) {
   };
 
   const topPodcasts = data;
-  const { setCurrentEpisode, setToPlay } = useEpisode();
-  const handleClick = async (item: TopPodcast) => {
-    const res = await fetch(`/api/episodesByFeedId?id=${item.id}`)
-    const episodes = await res.json();    
-    setCurrentEpisode(episodes[0]);
-    setToPlay(true);
-  };  
+  const { playFirstEpisode, error } = usePlayFirstEpisode();
   return (
     <section className="mb-8 mt-8">
       <h2 className="text-xl font-bold mb-4">{t('topPodcasts')}</h2>
+      {error && <p className="mb-2 text-sm text-red-600 dark:text-red-400">{error}</p>}
       <div className="bg-white dark:bg-gray-900 rounded-lg shadow overflow-hidden">
         <ul className="divide-y divide-gray-200">
           {topPodcasts.map((podcast, index) => (
@@ -78,8 +73,8 @@ export default function TopPodcasts({data}:{data:TopPodcast[]}) {
                    <i className={`fas fa-star ${favorites.has(podcast.id) ? 'text-yellow-500' : ''}`}></i>
                  </button>
                  <button className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-800"
-                   onClick={() => handleClick(podcast)}
-                 >
+onClick={() => playFirstEpisode(String(podcast.id))}
+                  >
                    <i className="fas fa-play"></i>
                  </button>
               </div>

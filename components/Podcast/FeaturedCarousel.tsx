@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 // @ts-expect-error react-slick does not ship TypeScript declarations
 import Slider from 'react-slick';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
 import {FeaturedItem} from '../../app/types';
-import { useEpisode } from '../../app/contexts/EpisodeContext';
 import { useTranslations } from 'next-intl';
 import { addFavorite, removeFavorite, getFavorites, type FavoriteType } from '@/lib/favoritesStore';
 
@@ -21,7 +21,13 @@ function createFavorite(item: FeaturedItem) {
   };
 }
 
-const FeaturedCarousel = ({ featuredItems }: {featuredItems: FeaturedItem[]}) => {
+const FeaturedCarousel = ({
+  featuredItems,
+  onPlay,
+}: {
+  featuredItems: FeaturedItem[];
+  onPlay: (feedId: string) => void;
+}) => {
   const t = useTranslations('home');
   const [currentSlide, setCurrentSlide] = useState(0);
   const [favorites, setFavorites] = useState<Set<number>>(new Set());
@@ -86,13 +92,6 @@ const FeaturedCarousel = ({ featuredItems }: {featuredItems: FeaturedItem[]}) =>
       ],
   };
 
-  const { currentEpisode, setCurrentEpisode, episodes, setEpisodes, setToPlay } = useEpisode();
-  const handleClick = async (item: FeaturedItem) => {
-    const res = await fetch(`/api/episodesByFeedId?id=${item.id}`)
-    const episodes = await res.json();
-    setCurrentEpisode(episodes[0]);
-    setToPlay(true);
-  };
   return (
     <div className="relative">
       {/* react-slick轮播容器 */}
@@ -114,7 +113,7 @@ const FeaturedCarousel = ({ featuredItems }: {featuredItems: FeaturedItem[]}) =>
               </button>
               {/* 播放按钮（悬停显示） */}
               <button className="absolute bottom-4 right-4 w-10 h-10 bg-indigo-600 dark:bg-indigo-500 hover:bg-indigo-700 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-                 onClick={() => handleClick(item)}
+                 onClick={() => onPlay(String(item.id))}
               >
                 <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
                   <path d="M6.3 2.841A1.5 1.5 0 004 4.11v11.78a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z"/>
@@ -123,12 +122,12 @@ const FeaturedCarousel = ({ featuredItems }: {featuredItems: FeaturedItem[]}) =>
             </div>
             {/* 文字内容 */}
             <div className="p-4">
-              <a 
+              <Link
                 href={`/podcast/${item.id}`}
                 className="font-semibold text-lg mb-1 line-clamp-2 text-black hover:text-indigo-600 transition-colors"
               >
                 {item.title}
-              </a>
+              </Link>
               <div className="mt-3 flex items-center justify-between">
                 <span className="text-xs text-gray-500 dark:text-gray-400">
                    {item.newestItemPublishTime ? (new Date(item.newestItemPublishTime * 1000)).toDateString() : '最新更新'}
