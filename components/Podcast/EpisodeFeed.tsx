@@ -6,6 +6,7 @@ import { useEpisode } from '../../app/contexts/EpisodeContext';
 import { useTranslations } from 'next-intl';
 import Player from '../Player';
 import { useRouter } from 'next/navigation';
+import { useInfiniteReveal } from '@/hooks/useInfiniteReveal';
 
 interface Podcast {
   id: string;
@@ -18,7 +19,7 @@ interface Podcast {
 }
 const fetchData = async (id: number) => {
   const podcast = await fetch(`/api/podcastById?id=${id}`);
-  const res = await fetch(`/api/episodesByFeedId?id=${id}`);
+  const res = await fetch(`/api/episodesByFeedId?id=${id}&max=50`);
   return {
     podcast: await podcast.json(),
     episodes: await res.json(),
@@ -26,26 +27,23 @@ const fetchData = async (id: number) => {
 }
 export default function EpisodePage({id}: {id:number}) {
   const t = useTranslations('episode');
-  // @ts-ignore
-//   const { id } = use(params);
   const episodeId = id;
   const router = useRouter();
 
-//   const [currentEpisode, setCurrentEpisode] = useState<Episode | null>(null);
   const { currentEpisode, setCurrentEpisode, episodes, setEpisodes, setToPlay } = useEpisode();
   const [podcast, setPodcast] = useState<Podcast | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
+  const { visibleCount, hasMore, revealMore, sentinelRef } = useInfiniteReveal(podcast?.episodes.length ?? 0);
 
-  const handleClick = async (item: any) => {
+  const handleClick = async (item: Episode) => {
     setCurrentEpisode(item);
     setToPlay(true);
   };  
   // 模拟数据获取
   useEffect(() => {
     fetchData(episodeId).then(res=>{
-      console.log('res', res);
       const {podcast, episodes} = res;
       setPodcast({...podcast.feed, episodes});
       setCurrentEpisode(episodes[0]);
@@ -127,12 +125,15 @@ export default function EpisodePage({id}: {id:number}) {
 
           {/* 剧集列表 */}
           <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-md overflow-hidden">
-            <div className="px-6 py-4 border-b">
+            <div className="px-6 py-4 border-b flex items-baseline justify-between">
               <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{t('allEpisodes')}</h3>
+              <span className="text-xs tabular-nums tracking-wide text-gray-500 dark:text-gray-400">
+                {t('count', { shown: visibleCount, total: podcast.episodes.length })}
+              </span>
             </div>
             
             <div className="divide-y">
-              {podcast.episodes.map((episode, index) => (
+              {podcast.episodes.slice(0, visibleCount).map((episode, index) => (
                 <div
                   key={episode.id}
                   className={`p-6 hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer transition-colors ${
@@ -162,6 +163,17 @@ export default function EpisodePage({id}: {id:number}) {
                 </div>
               ))}
             </div>
+
+            {hasMore && (
+              <div ref={sentinelRef} className="flex justify-center py-6">
+                <button
+                  onClick={revealMore}
+                  className="rounded-full border border-gray-300 bg-white px-5 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200 dark:hover:bg-gray-800"
+                >
+                  {t('loadMore')}
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>

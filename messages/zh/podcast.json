@@ -33,7 +33,9 @@
   },
   "episode": {
     "loading": "加载中…",
-    "allEpisodes": "全部剧集"
+    "allEpisodes": "全部剧集",
+    "count": "{shown} / {total} 集",
+    "loadMore": "加载更多"
   },
   "topPodcasts": {
     "addToFavorites": "添加到收藏",
@@ -49,7 +51,8 @@
     "heading": "“{term}” 的搜索结果",
     "tagHeading": "分类为“{tag}”的节目",
     "trendingHeading": "热门节目",
-    "count": "{count} 个结果",
+    "count": "{shown} / {total} 个结果",
+    "loadMore": "加载更多",
     "by": "作者",
     "latestUpdate": "最新更新",
     "noResults": "没有找到与“{term}”相关的节目。",

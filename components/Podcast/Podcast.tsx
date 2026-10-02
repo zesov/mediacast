@@ -38,7 +38,11 @@ export default function PodcastPage({ feeds, searchTerm, tag }: Props) {
         <div className="flex flex-col lg:flex-row gap-6">
           <div className="lg:w-2/3">
             {isSearch ? (
-              <SearchResults feeds={feeds} heading={heading} />
+              <SearchResults
+                key={searchTerm ?? tag ?? 'trending'}
+                feeds={feeds}
+                heading={heading}
+              />
             ) : (
               <TopPodcasts data={feeds} />
             )}

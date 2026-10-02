@@ -19,7 +19,7 @@ export default async function EpisodeFeedPage({ params }: Props) {
     <>
     <Navbar />
       <EpisodeProvider>
-        <EpisodePage id={id} />
+        <EpisodePage key={id} id={id} />
       </EpisodeProvider>
     </>
   );

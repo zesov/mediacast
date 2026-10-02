@@ -43,6 +43,12 @@ export function categoryNames(categories?: Record<string, string> | null): strin
   return Object.values(categories).filter((name): name is string => Boolean(name));
 }
 
+export const PAGE_SIZE = 10;
+
+export function nextVisibleCount(current: number, total: number, pageSize: number = PAGE_SIZE): number {
+  return Math.min(current + pageSize, Math.max(total, 0));
+}
+
 export function toTopPodcasts(feeds?: RawFeed[] | null): TopPodcast[] {
   if (!Array.isArray(feeds)) return [];
 

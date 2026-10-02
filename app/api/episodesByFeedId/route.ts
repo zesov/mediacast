@@ -7,7 +7,9 @@ export async function GET(
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
-    const result = await client.episodesByFeedId(Number(id),{max:10});
+    const requested = Number(searchParams.get('max'));
+    const max = Number.isFinite(requested) && requested > 0 ? Math.min(requested, 100) : 10;
+    const result = await client.episodesByFeedId(Number(id), { max });
     return NextResponse.json(result.items);
   } catch (error) {
     return NextResponse.json(

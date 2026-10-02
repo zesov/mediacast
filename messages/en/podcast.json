@@ -33,7 +33,9 @@
   },
   "episode": {
     "loading": "Loading…",
-    "allEpisodes": "All Episodes"
+    "allEpisodes": "All Episodes",
+    "count": "{shown} of {total} episodes",
+    "loadMore": "Load more"
   },
   "topPodcasts": {
     "addToFavorites": "Add to favorites",
@@ -49,7 +51,8 @@
     "heading": "Search results for “{term}”",
     "tagHeading": "Podcasts tagged “{tag}”",
     "trendingHeading": "Trending podcasts",
-    "count": "{count} results",
+    "count": "{shown} of {total} results",
+    "loadMore": "Load more",
     "by": "by",
     "latestUpdate": "Latest update",
     "noResults": "No podcasts matched “{term}”.",

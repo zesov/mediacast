@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { resolvePodcastQuery, categoryNames, toTopPodcasts } from './podcastSearch';
+import { resolvePodcastQuery, categoryNames, toTopPodcasts, nextVisibleCount, PAGE_SIZE } from './podcastSearch';
 
 describe('resolvePodcastQuery', () => {
   it('routes a search term to the byterm search', () => {
@@ -95,5 +95,25 @@ describe('toTopPodcasts', () => {
   it('defaults a missing lastUpdateTime to 0, as returned by /podcasts/trending', () => {
     const [podcast] = toTopPodcasts([{ id: 1, title: 'Trending Show' }]);
     expect(podcast.lastUpdateTime).toBe(0);
+  });
+});
+describe('nextVisibleCount', () => {
+  it('defaults to a page size of 10', () => {
+    expect(PAGE_SIZE).toBe(10);
+    expect(nextVisibleCount(10, 50)).toBe(20);
+  });
+
+  it('never reveals more than the total', () => {
+    expect(nextVisibleCount(40, 50)).toBe(50);
+    expect(nextVisibleCount(50, 50)).toBe(50);
+  });
+
+  it('caps at zero when there are no feeds', () => {
+    expect(nextVisibleCount(10, 0)).toBe(0);
+    expect(nextVisibleCount(10, -5)).toBe(0);
+  });
+
+  it('honours an explicit page size', () => {
+    expect(nextVisibleCount(10, 50, 25)).toBe(35);
   });
 });

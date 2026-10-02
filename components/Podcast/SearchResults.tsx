@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import { Play, Star } from 'lucide-react';
 import { useEpisode } from '@/app/contexts/EpisodeContext';
 import { categoryNames } from '@/lib/podcastSearch';
+import { useInfiniteReveal } from '@/hooks/useInfiniteReveal';
 import { addFavorite, removeFavorite, getFavorites } from '@/lib/favoritesStore';
 import type { TopPodcast } from '@/app/types';
 
@@ -30,6 +31,7 @@ export default function SearchResults({ feeds, heading }: Props) {
   const [favorites, setFavorites] = useState<Set<number>>(new Set());
   const [pendingId, setPendingId] = useState<number | null>(null);
   const { setCurrentEpisode, setToPlay } = useEpisode();
+  const { visibleCount, hasMore, revealMore, sentinelRef } = useInfiniteReveal(feeds.length);
 
   useEffect(() => {
     getFavorites().then((list) => {
@@ -82,12 +84,12 @@ export default function SearchResults({ feeds, heading }: Props) {
       <header className="flex flex-wrap items-baseline gap-x-3 gap-y-1 border-b border-gray-200 pb-3 dark:border-gray-800">
         <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">{heading}</h1>
         <span className="text-xs tabular-nums tracking-wide text-gray-500 dark:text-gray-400">
-          {t('count', { count: feeds.length })}
+          {t('count', { shown: visibleCount, total: feeds.length })}
         </span>
       </header>
 
       <ul>
-        {feeds.map((podcast) => {
+        {feeds.slice(0, visibleCount).map((podcast) => {
           const categories = categoryNames(podcast.categories);
           const isFavorite = favorites.has(podcast.id);
           const isPending = pendingId === podcast.id;
@@ -184,6 +186,17 @@ export default function SearchResults({ feeds, heading }: Props) {
           );
         })}
       </ul>
+
+      {hasMore && (
+        <div ref={sentinelRef} className="flex justify-center pt-6">
+          <button
+            onClick={revealMore}
+            className="rounded-full border border-gray-300 bg-white px-5 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200 dark:hover:bg-gray-800"
+          >
+            {t('loadMore')}
+          </button>
+        </div>
+      )}
     </section>
   );
 }
