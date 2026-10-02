@@ -91,8 +91,8 @@ next-podcast/
 | Navbar | component | components/Navbar.tsx:10 | 3 | Navigation with search and language switcher |
 | SearchInput | component | components/SearchInput.tsx:73 | 2 | Search bar with PeerTube filter dropdown |
 | PeerTubeFilters | component | components/PeerTube/PeerTubeFilters.tsx:247 | 4 | Filter UI for PeerTube search |
-| LiveTvPage | component | components/LiveTV/LiveTvPage.tsx:10 | 2 | Free-TV/IPTV live TV player |
-| FreeTVGuide | component | components/FreeTV/FreeTVGuide.tsx:12 | 2 | Electronic program guide for live TV |
+| (removed) |
+| (removed) |
 
 ## CONVENTIONS
 - **TypeScript is loose**: `any` and `// @ts-ignore` used liberally in components - match surrounding looseness rather than introducing strict typing
@@ -102,7 +102,7 @@ next-podcast/
 - **react-slick**: CSS must be imported (slick.css + slick-theme.css) for carousel components
 - **Next.js 15+**: Route `params` are async - always use `const { id } = await params`
 - **Image whitelist**: `next.config.ts` whitelists all remote hosts (`hostname: '**'`) for arbitrary podcast artwork
-- **Environment**: `.env` holds `PODCAST_INDEX_KEY` (gitignored); App Secret hardcoded in `app/api/db.ts`
+- **Environment**: `.env` holds `PODCAST_INDEX_KEY` (gitignored); `PODCAST_INDEX_KEY` and `PODCAST_INDEX_SECRET` are read from `process.env` (set in `.env`, gitignored)
 - **Raw endpoints**: `client.raw(path)` used for Podcast Index endpoints not in official client, results cast with `as`
 
 ## ANTI-PATTERNS (THIS PROJECT)
@@ -112,7 +112,7 @@ next-podcast/
 - **Missing PWA assets**: Ensure icons/icon-192.png and icons/icon-512.png exist in public/
 - **Blocking navigation**: Tracking requests use `keepalive: true` for end events to prevent navigation cancellation
 - **Hardcoded secrets**: Do not rotate Podcast Index App Secret in `app/api/db.ts` without updating `.env` and podcastdx account
-- **Test infra**: No automated test suite exists - verify changes via `npm run build` + manual dev-server check
+- **Test infra**: 12 test files, 163 tests; verify via `npm run build` + manual dev-server check
 
 ## UNIQUE STYLES
 - **Privacy-first tracking**: IP addresses hashed, anonymous session IDs, no PII stored in playback tracking
@@ -142,7 +142,7 @@ cp .env.example .env       # Create environment file (add PODCAST_INDEX_KEY)
 ```
 
 ## NOTES
-- **tsconfig.json gotcha**: The `include` array references `podcast/[id]/page.js` (stale) - the real file is `app/podcast/[id]/page.tsx`. Do not "fix" without verifying nothing depends on it.
+- **tsconfig.json gotcha**: If the `include` array references `podcast/[id]/page.js`, that entry is stale; the real file is `app/podcast/[id]/page.tsx`. Do not "fix" without verifying nothing depends on it.
 - **Agent scratch dir**: `.code-context/` is untracked - do not commit
 - **Test infrastructure**: No test suite exists; add behavior and verify via `npm run build` + manual dev-server check
 - **Package manager**: Uses both `bun.lock` and `package-lock.json` - use `bun` for installs but retain both lockfiles
