@@ -20,11 +20,13 @@ interface Podcast {
   episodes: Episode[];
 }
 const fetchData = async (id: number) => {
-  const podcast = await fetch(`/api/podcastById?id=${id}`);
-  const res = await fetch(`/api/episodesByFeedId?id=${id}&max=50`);
+  const [podcastRes, episodesRes] = await Promise.all([
+    fetch(`/api/podcastById?id=${id}`),
+    fetch(`/api/episodesByFeedId?id=${id}&max=50`),
+  ]);
   return {
-    podcast: await podcast.json(),
-    episodes: await res.json(),
+    podcast: await podcastRes.json(),
+    episodes: await episodesRes.json(),
   };
 }
 export default function EpisodePage({id}: {id:number}) {
@@ -32,23 +34,33 @@ export default function EpisodePage({id}: {id:number}) {
   const episodeId = id;
   const router = useRouter();
 
-  const { currentEpisode, setCurrentEpisode, episodes, setEpisodes, setToPlay, isPlaying } = useEpisode();
+  const { currentEpisode, setCurrentEpisode, setToPlay, isPlaying } = useEpisode();
   const [podcast, setPodcast] = useState<Podcast | null>(null);
   const [isFavorited, setIsFavorited] = useState(false);
+  const [loadFailed, setLoadFailed] = useState(false);
   const { visibleCount, hasMore, revealMore, sentinelRef } = useInfiniteReveal(podcast?.episodes.length ?? 0);
 
   const handleClick = async (item: Episode) => {
     setCurrentEpisode(item);
     setToPlay(true);
   };  
-  // 模拟数据获取
   useEffect(() => {
-    fetchData(episodeId).then(res=>{
-      const {podcast, episodes} = res;
-      setPodcast({...podcast.feed, episodes});
-      setCurrentEpisode(episodes[0]);
-    });
-  }, [episodeId]);
+    let cancelled = false;
+    fetchData(episodeId)
+      .then((res) => {
+        if (cancelled) return;
+        const { podcast, episodes } = res;
+        if (!podcast?.feed || !Array.isArray(episodes) || episodes.length === 0) return;
+        setPodcast({ ...podcast.feed, episodes });
+        setCurrentEpisode(episodes[0]);
+      })
+      .catch(() => {
+        if (!cancelled) setLoadFailed(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [episodeId, setCurrentEpisode]);
 
   useEffect(() => {
     if (!podcast) return;
@@ -71,6 +83,14 @@ export default function EpisodePage({id}: {id:number}) {
     }
     setIsFavorited(!isFavorited);
   };
+
+  if (loadFailed) {
+    return (
+      <div className="flex justify-center items-center min-h-screen text-red-600 dark:text-red-400">
+        {t('loadFailed')}
+      </div>
+    );
+  }
 
   if (!podcast || !currentEpisode) {
     return <div className="flex justify-center items-center min-h-screen">{t('loading')}</div>;
@@ -155,7 +175,7 @@ export default function EpisodePage({id}: {id:number}) {
             </div>
             
             <div className="divide-y">
-              {podcast.episodes.slice(0, visibleCount).map((episode, index) => (
+              {podcast.episodes.slice(0, visibleCount).map((episode) => (
                 <div
                   key={episode.id}
                   className={`p-6 hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer transition-colors ${
@@ -165,7 +185,7 @@ export default function EpisodePage({id}: {id:number}) {
                 >
                   <div className="flex items-start space-x-4">
                     <div className="flex-shrink-0 w-12 h-12 bg-gray-200 dark:bg-gray-800 rounded-lg flex items-center justify-center">
-                      <img src={episode.image} className="text-gray-500 dark:text-gray-400 font-medium"></img>
+                      <img src={episode.image} alt="" className="w-full h-full object-cover rounded-lg" />
                     </div>
                     
                     <div className="flex-1 min-w-0">
@@ -212,11 +232,4 @@ export default function EpisodePage({id}: {id:number}) {
       </div>
     </>
   );
-}
-
-// 辅助函数：格式化时间
-function formatTime(seconds: number): string {
-  const minutes = Math.floor(seconds / 60);
-  const remainingSeconds = Math.floor(seconds % 60);
-  return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
 }
