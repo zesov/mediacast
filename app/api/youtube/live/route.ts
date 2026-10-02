@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { assertAllowedHostname, assertPublicHttpUrl, safeFetch } from '@/lib/urlGuard';
 
 interface YoutubeLiveResult {
   channelId: string;
   embedUrl: string;
   name: string;
 }
+
+const YOUTUBE_HOSTS = ['youtube.com', 'youtu.be', 'youtube-nocookie.com'];
 
 // 主頻道 ID 只出現在 metadata 區的 channelUrl（權威、唯一；gridChannelRenderer 是推薦頻道，不可用）
 const CHANNEL_URL_RE = /"channelUrl":"https:\/\/www\.youtube\.com\/channel\/(UC[\w-]{22})"/;
@@ -30,21 +33,25 @@ function extractName(html: string): string {
 export async function GET(req: NextRequest) {
   const url = req.nextUrl.searchParams.get('url');
   if (!url) return NextResponse.json({ error: 'missing url' }, { status: 400 });
-  if (!/^https?:\/\//i.test(url)) {
+  try {
+    assertAllowedHostname(new URL(url).hostname, YOUTUBE_HOSTS);
+    assertPublicHttpUrl(url);
+  } catch {
     return NextResponse.json({ error: 'invalid url' }, { status: 400 });
   }
   // 剝離 /live 後綴：直播頁缺 channelUrl metadata，頻道主頁才有；是否在播由 embed 自行判斷
   const normalized = url.replace(/\/live\/?$/, '');
 
   try {
-    const res = await fetch(normalized, {
-      headers: {
-        // youtube 需要瀏覽器 UA，否則回傳 consent / 錯誤頁
-        'User-Agent':
-          'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
-        'Accept-Language': 'en',
+    const { response: res } = await safeFetch(normalized, {
+      init: {
+        headers: {
+          // youtube 需要瀏覽器 UA，否則回傳 consent / 錯誤頁
+          'User-Agent':
+            'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
+          'Accept-Language': 'en',
+        },
       },
-      redirect: 'follow',
     });
     if (!res.ok) {
       return NextResponse.json({ error: `fetch failed: ${res.status}` }, { status: 502 });

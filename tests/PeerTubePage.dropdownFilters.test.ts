@@ -1,21 +1,9 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { act } from 'react';
-
-// Mock document for jsdom-less environment
-const mockDocument = {
-  createElement: (tag: string) => ({
-    tagName: tag.toUpperCase(),
-    appendChild: vi.fn(),
-    contains: vi.fn((el: any) => el === mockDocument.createElement('button')),
-  }),
-};
-
-// @ts-ignore
-global.document = mockDocument;
 
 describe('PeerTubePage dropdown filters', () => {
   it('should start with filters closed', () => {
-    let isFiltersOpen = false;
+    const isFiltersOpen = false;
     
     expect(isFiltersOpen).toBe(false);
   });
@@ -47,7 +35,7 @@ describe('PeerTubePage dropdown filters', () => {
       }
     };
     
-    const mockEvent = { target: {} };
+    const mockEvent = { target: document.createElement('div') };
     handleClickOutside(mockEvent);
     
     expect(setIsFiltersOpen).toHaveBeenCalledWith(false);
@@ -65,7 +53,7 @@ describe('PeerTubePage dropdown filters', () => {
       }
     };
     
-    const mockEvent = { target: {} };
+    const mockEvent = { target: document.createElement('div') };
     handleClickOutside(mockEvent);
     
     expect(setIsFiltersOpen).not.toHaveBeenCalled();

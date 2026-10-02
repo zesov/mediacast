@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { assertPublicHttpUrl, safeFetch } from '@/lib/urlGuard';
 
 // 直播流代理：解决外部 IPTV 流源（Free-TV 等）不带 CORS 头导致浏览器端 hls.js 无法直连的问题。
 // 工作方式：
@@ -9,16 +10,6 @@ import { NextRequest, NextResponse } from 'next/server';
 //   4. TS/TS 片段等二进制直接透传。
 
 const MAX_DOWNLOAD_SIZE = 50 * 1024 * 1024; // 防御：单次响应不超过 50MB
-
-// 代理只允许 http(s)，避免 file:// 等协议被用作 SSRF
-function isAllowedUrl(raw: string): boolean {
-  try {
-    const u = new URL(raw);
-    return u.protocol === 'http:' || u.protocol === 'https:';
-  } catch {
-    return false;
-  }
-}
 
 // 若 URL 为相对路径则基于 base 解析为绝对地址
 function resolveUrl(u: string, base: string): string {
@@ -61,19 +52,21 @@ function isHlsContent(contentType: string | null, url: string): boolean {
 export async function GET(request: NextRequest) {
   const target = request.nextUrl.searchParams.get('url') || '';
 
-  if (!target || !isAllowedUrl(target)) {
+  try {
+    assertPublicHttpUrl(target);
+  } catch {
     return NextResponse.json({ error: 'invalid url' }, { status: 400 });
   }
 
   try {
-    const res = await fetch(target, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (compatible; NextPodcast/1.0)',
-        Referer: new URL(target).origin,
+    const { response: res, finalUrl } = await safeFetch(target, {
+      init: {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (compatible; NextPodcast/1.0)',
+          Referer: new URL(target).origin,
+        },
+        cache: 'no-store',
       },
-      // 跟随 302 重定向（很多 IPTV 源会跳转带时效 key 的真实地址）
-      redirect: 'follow',
-      cache: 'no-store',
     });
 
     if (!res.ok) {
@@ -84,7 +77,6 @@ export async function GET(request: NextRequest) {
     }
 
     const contentType = res.headers.get('content-type');
-    const finalUrl = res.url || target; // 重定向后的真实 URL，作为相对路径解析基准
     const isPlaylist = isHlsContent(contentType, finalUrl);
 
     // m3u8：读文本 → 重写 URL → 返回

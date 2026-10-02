@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { parseM3U } from '@/lib/m3uParser';
+import { assertPublicHttpUrl, safeFetch } from '@/lib/urlGuard';
 
 // Simple in-memory rate limiter (per IP, 10 req/min)
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
@@ -32,22 +33,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'URL is required' }, { status: 400 });
     }
 
-    // Validate URL
-    let parsed: URL;
     try {
-      parsed = new URL(url);
+      assertPublicHttpUrl(url);
     } catch {
-      return NextResponse.json({ error: 'Invalid URL format' }, { status: 400 });
+      return NextResponse.json({ error: 'Invalid or disallowed URL' }, { status: 400 });
     }
 
-    if (!['http:', 'https:'].includes(parsed.protocol)) {
-      return NextResponse.json({ error: 'Only HTTP/HTTPS URLs are allowed' }, { status: 400 });
-    }
-
-    // Fetch M3U file
-    const res = await fetch(url, {
-      headers: { 'User-Agent': 'M3U-Proxy/1.0' },
-      signal: AbortSignal.timeout(15_000),
+    const { response: res, finalUrl } = await safeFetch(url, {
+      init: {
+        headers: { 'User-Agent': 'M3U-Proxy/1.0' },
+        signal: AbortSignal.timeout(15_000),
+      },
     });
 
     if (!res.ok) {
@@ -55,7 +51,7 @@ export async function POST(request: NextRequest) {
     }
 
     const text = await res.text();
-    const result = parseM3U(text, url);
+    const result = parseM3U(text, finalUrl);
 
     return NextResponse.json(result);
   } catch (e) {
