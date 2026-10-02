@@ -30,7 +30,6 @@ const t = useTranslations('player');
   const hasStartedRef = useRef(false);
 
   const currentEpisode = contextEpisode || defaultEpisode;
-  if (!currentEpisode) return null;
 
   const { startTracking, stopTracking, heartbeat } = usePlaybackTracking({
     contentType: 'podcast',
@@ -39,7 +38,6 @@ const t = useTranslations('player');
     enabled: true,
   });
 
-  // 初始化音频元素
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
@@ -56,16 +54,20 @@ const t = useTranslations('player');
     audio.addEventListener('loadedmetadata', updateDuration);
     audio.addEventListener('ended', handleEnd);
 
-    // 设置音量
-    audio.volume = volume;
-    audio.muted = isMuted;
-
     return () => {
       audio.removeEventListener('timeupdate', updateTime);
       audio.removeEventListener('loadedmetadata', updateDuration);
       audio.removeEventListener('ended', handleEnd);
     };
-  }, [volume, isMuted, stopTracking]);
+  }, [stopTracking]);
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    audio.volume = volume;
+    audio.muted = isMuted;
+  }, [volume, isMuted]);
 
   // 播放/暂停切换
   const togglePlayPause = () => {
@@ -226,7 +228,7 @@ const t = useTranslations('player');
         {title && (
           <div className="flex items-center mb-4">
             <div className="w-16 h-16 bg-indigo-100 rounded-lg flex items-center justify-center">
-              <img className="text-indigo-500 text-xl" src={currentEpisode.image || currentEpisode.feedImage || '/music.svg'}></img>
+              <img className="text-indigo-500 text-xl" src={currentEpisode.image || currentEpisode.feedImage || '/music.svg'} alt="" />
             </div>
             <div className="ml-4">
               <h3 className="font-medium">{currentEpisode.title || t('notSelected')}</h3>
