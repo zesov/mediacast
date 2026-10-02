@@ -122,7 +122,7 @@ export default function PeerTubePlayer({ video }: Props) {
     };
 
     // Check if already rendered
-    let existingPeertubeEl = container.querySelector("peertube-video") as HTMLElement | null;
+    const existingPeertubeEl = container.querySelector("peertube-video") as HTMLElement | null;
     let cleanup: (() => void) | null = null;
 
     if (existingPeertubeEl) {

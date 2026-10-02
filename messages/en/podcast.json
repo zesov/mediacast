@@ -39,7 +39,8 @@
     "play": "Play {title}",
     "pause": "Pause {title}",
     "addToFavorites": "Add to favorites",
-    "removeFromFavorites": "Remove from favorites"
+    "removeFromFavorites": "Remove from favorites",
+    "loadFailed": "Failed to load this podcast"
   },
   "topPodcasts": {
     "addToFavorites": "Add to favorites",

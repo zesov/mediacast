@@ -66,7 +66,7 @@ export default function PeerTubeVideoCard({ video, active, onSelect }: Props) {
       }`}
     >
       <div className="relative aspect-video bg-gray-200 dark:bg-gray-800">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
+        { }
         <img
           src={video.previewUrl || video.thumbnailUrl || "/music.svg"}
           alt={video.name}

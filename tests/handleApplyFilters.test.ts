@@ -19,7 +19,7 @@ describe('PeerTubePage filter application bug', () => {
     
     // runSearch uses filtersState from closure (STALE!)
     // In the real component, this is captured at render time
-    let closureFilters = filtersState;
+    const closureFilters = filtersState;
     const runSearch = (query: string) => {
       runSearchCalledWith = { query, filters: closureFilters }; // Uses stale closure!
     };
