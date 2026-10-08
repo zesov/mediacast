@@ -31,7 +31,7 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  applicationName: "Next Podcast",
+  applicationName: "Mediacast",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",

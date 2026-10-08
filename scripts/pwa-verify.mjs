@@ -24,7 +24,7 @@ if (manifestRes.status() !== 200) {
 }
 const manifest = await manifestRes.json();
 const expect = {
-  name: "Next Podcast",
+  name: "Mediacast",
   start_url: "/zh",
   theme_color: "#4f46e5",
   display: "standalone",

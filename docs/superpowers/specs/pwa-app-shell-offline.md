@@ -42,7 +42,7 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Next Podcast",
+    name: "Mediacast",
     short_name: "播客",
     description: "HK / RTHK 播客与直播播放器",
     start_url: "/zh",
@@ -129,7 +129,7 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  applicationName: "Next Podcast",
+  applicationName: "Mediacast",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",

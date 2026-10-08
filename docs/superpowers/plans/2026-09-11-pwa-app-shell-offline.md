@@ -132,7 +132,7 @@ import type { MetadataRoute } from "next";
 // PWA manifest：由 Next.js 自动生成 /manifest.webmanifest
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Next Podcast",
+    name: "Mediacast",
     short_name: "播客",
     description: "HK / RTHK 播客与直播播放器",
     start_url: "/zh",
@@ -381,7 +381,7 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  applicationName: "Next Podcast",
+  applicationName: "Mediacast",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
@@ -456,7 +456,7 @@ page.on("console", (m) => m.type() === "error" && errors.push(m.text()));
 const manifestRes = await page.goto(`${BASE}/manifest.webmanifest`);
 if (manifestRes.status() !== 200) throw new Error(`manifest status ${manifestRes.status()}`);
 const manifest = await manifestRes.json();
-const expect = { name: "Next Podcast", start_url: "/zh", theme_color: "#4f46e5", display: "standalone" };
+const expect = { name: "Mediacast", start_url: "/zh", theme_color: "#4f46e5", display: "standalone" };
 for (const [k, v] of Object.entries(expect)) {
   if (manifest[k] !== v) throw new Error(`manifest.${k}=${JSON.stringify(manifest[k])}, expect ${v}`);
 }
