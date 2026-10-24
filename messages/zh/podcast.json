@@ -15,7 +15,12 @@
     "topPodcastsRemoveFromFavorites": "从收藏移除",
     "podcast": "播客",
     "liveTV": "直播",
-    "peertube": "PeerTube"
+    "peertube": "PeerTube",
+    "favoritesExport": "导出",
+    "favoritesImport": "导入",
+    "favoritesImportPlaceholder": "在此粘贴 JSON 数据...",
+    "favoritesCancel": "取消",
+    "favoritesImportConfirm": "确认导入"
   },
   "categoryNames": {
     "history": "历史",

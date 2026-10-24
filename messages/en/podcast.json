@@ -15,7 +15,12 @@
     "topPodcastsRemoveFromFavorites": "Remove from favorites",
     "podcast": "Podcasts",
     "liveTV": "Live TV",
-    "peertube": "PeerTube"
+    "peertube": "PeerTube",
+    "favoritesExport": "Export",
+    "favoritesImport": "Import",
+    "favoritesImportPlaceholder": "Paste JSON data here...",
+    "favoritesCancel": "Cancel",
+    "favoritesImportConfirm": "Import"
   },
   "categoryNames": {
     "history": "History",

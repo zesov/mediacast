@@ -99,3 +99,20 @@ export async function removeAllFavorites(): Promise<void> {
   await tx.store.clear();
   await tx.done;
 }
+
+export async function exportFavorites(): Promise<string> {
+  const all = await getFavorites();
+  return JSON.stringify(all, null, 2);
+}
+
+export async function importFavorites(json: string): Promise<number> {
+  const items: FavoriteItem[] = JSON.parse(json);
+  const db = await getDB();
+  let imported = 0;
+  for (const item of items) {
+    const key = makeKey(item.type, item.id);
+    await db.put(FAVORITES_STORE, { ...item, key });
+    imported++;
+  }
+  return imported;
+}

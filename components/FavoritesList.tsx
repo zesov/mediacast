@@ -3,11 +3,14 @@
 import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
-import { getFavorites, removeFavorite, type FavoriteItem, type FavoriteType } from '@/lib/favoritesStore';
+import { getFavorites, removeFavorite, exportFavorites, importFavorites, type FavoriteItem, type FavoriteType } from '@/lib/favoritesStore';
 
 export default function FavoritesList() {
   const t = useTranslations('home');
   const [favorites, setFavorites] = useState<FavoriteItem[]>([]);
+  const [showImport, setShowImport] = useState(false);
+  const [importText, setImportText] = useState('');
+  const [importError, setImportError] = useState('');
 
   useEffect(() => {
     getFavorites().then(setFavorites);
@@ -18,6 +21,33 @@ export default function FavoritesList() {
     setFavorites((current) =>
       current.filter((item) => !(item.type === type && item.id === id))
     );
+  };
+
+  const handleExport = async () => {
+    const json = await exportFavorites();
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'podcast-favorites.json';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleImport = async () => {
+    if (!importText.trim()) {
+      setImportError(t('importEmpty'));
+      return;
+    }
+    try {
+      const count = await importFavorites(importText);
+      setFavorites(await getFavorites());
+      setImportText('');
+      setShowImport(false);
+      setImportError('');
+    } catch {
+      setImportError(t('importError'));
+    }
   };
 
   const podcastFavorites = favorites.filter((item) => item.type === 'podcast');
@@ -84,6 +114,45 @@ export default function FavoritesList() {
         </div>
       ) : (
         <div className="p-4">
+          <div className="flex justify-end gap-2 mb-4">
+            <button
+              onClick={handleExport}
+              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-md text-sm font-medium"
+            >
+              {t('favoritesExport')}
+            </button>
+            <button
+              onClick={() => setShowImport(!showImport)}
+              className="px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-white rounded-md text-sm font-medium"
+            >
+              {t('favoritesImport')}
+            </button>
+          </div>
+          {showImport && (
+            <div className="mb-4">
+              <textarea
+                value={importText}
+                onChange={(e) => setImportText(e.target.value)}
+                placeholder={t('favoritesImportPlaceholder')}
+                className="w-full h-32 p-3 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+              />
+              {importError && <p className="mt-2 text-sm text-red-500">{importError}</p>}
+              <div className="mt-2 flex justify-end gap-2">
+                <button
+                  onClick={() => setShowImport(false)}
+                  className="px-3 py-1 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-white rounded-md text-sm"
+                >
+                  {t('favoritesCancel')}
+                </button>
+                <button
+                  onClick={handleImport}
+                  className="px-3 py-1 bg-indigo-600 hover:bg-indigo-500 text-white rounded-md text-sm"
+                >
+                  {t('favoritesImportConfirm')}
+                </button>
+              </div>
+            </div>
+          )}
           {renderSection(t('podcast'), podcastFavorites, 'podcast', '/podcast')}
           {renderSection(t('liveTV'), liveFavorites, 'live', '/live')}
           {renderSection(t('peertube'), peertubeFavorites, 'peertube', '/peertube')}
