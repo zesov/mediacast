@@ -103,7 +103,9 @@
     "direct": {
       "enterUrl": "输入 HLS 串流或 YouTube 直播地址（如 https://example.com/stream.m3u8）",
       "play": "播放",
-      "recentUrls": "最近使用"
+      "recentUrls": "最近使用",
+      "addFavorite": "收藏",
+      "removeFavorite": "取消收藏"
     },
     "channelInfo": "频道信息",
     "streamUrl": "串流地址",

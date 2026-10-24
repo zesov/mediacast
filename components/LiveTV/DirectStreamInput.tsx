@@ -1,16 +1,29 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 
 interface DirectStreamInputProps {
   onPlay: (url: string) => void;
   recentUrls: string[];
+  isFav?: (id: string) => Promise<boolean>;
+  toggleFav?: (id: string, name?: string) => Promise<void>;
 }
 
-export default function DirectStreamInput({ onPlay, recentUrls }: DirectStreamInputProps) {
+export default function DirectStreamInput({ onPlay, recentUrls, isFav, toggleFav }: DirectStreamInputProps) {
   const t = useTranslations('live');
   const [url, setUrl] = useState('');
+  const [favStates, setFavStates] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    if (!isFav || !toggleFav) return;
+    let cancelled = false;
+    recentUrls.forEach(async (u) => {
+      const fav = await isFav(u);
+      if (!cancelled) setFavStates((prev) => ({ ...prev, [u]: fav }));
+    });
+    return () => { cancelled = true; };
+  }, [recentUrls, isFav]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,17 +55,36 @@ export default function DirectStreamInput({ onPlay, recentUrls }: DirectStreamIn
           <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">{t('direct.recentUrls')}</p>
           <div className="flex flex-wrap gap-2">
             {recentUrls.map((u) => (
-              <button
+              <div
                 key={u}
-                onClick={() => {
-                  setUrl(u);
-                  onPlay(u);
-                }}
-                className="text-xs px-2 py-1 rounded bg-gray-200 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-300 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white truncate max-w-[200px]"
-                title={u}
+                className="flex items-center gap-1.5 bg-gray-200 dark:bg-gray-800 rounded px-2 py-1 hover:bg-gray-300 dark:hover:bg-gray-700"
               >
-                {u.length > 30 ? u.slice(0, 30) + '…' : u}
-              </button>
+                <button
+                  onClick={() => {
+                    setUrl(u);
+                    onPlay(u);
+                  }}
+                  className="text-xs flex-1 text-left text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white truncate max-w-[200px]"
+                  title={u}
+                >
+                  {u.length > 30 ? u.slice(0, 30) + '…' : u}
+                </button>
+                {toggleFav && isFav && (
+                  <button
+                    onClick={async (e) => {
+                      e.stopPropagation();
+                      await toggleFav(u, u);
+                      const fav = await isFav(u);
+                      setFavStates((prev) => ({ ...prev, [u]: fav }));
+                    }}
+                    className="flex-shrink-0 p-1 text-gray-400 dark:text-gray-500 hover:text-yellow-400 dark:hover:text-yellow-300 transition-colors"
+                    aria-label={favStates[u] ? t('direct.removeFavorite') : t('direct.addFavorite')}
+                    title={favStates[u] ? t('direct.removeFavorite') : t('direct.addFavorite')}
+                  >
+                    <i className={favStates[u] ? 'fas fa-star' : 'far fa-star'} style={{ fontSize: '12px', color: favStates[u] ? '#fbbf24' : 'currentColor' }} />
+                  </button>
+                )}
+              </div>
             ))}
           </div>
         </div>

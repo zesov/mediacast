@@ -306,6 +306,37 @@ export default function LiveTvPage() {
     [direct]
   );
 
+  // === Direct 收藏 ===
+  const handleDirectFav = useCallback(
+    async (url: string, name?: string) => {
+      const type = 'live' as const;
+      const currentlyFav = favorites.has(url);
+      if (currentlyFav) {
+        await removeFavorite(type, url);
+        setFavorites((prev) => {
+          const next = new Set(prev);
+          next.delete(url);
+          return next;
+        });
+      } else {
+        await addFavorite({
+          type,
+          id: url,
+          title: name || url,
+          description: '',
+          streamUrl: url,
+          addedAt: Date.now(),
+        });
+        setFavorites((prev) => {
+          const next = new Set(prev);
+          next.add(url);
+          return next;
+        });
+      }
+    },
+    [favorites]
+  );
+
   // === 列表数据（按 Tab）===
   const listItems: ChannelItem[] = useMemo(() => {
     const q = searchInput.trim().toLowerCase();
@@ -384,7 +415,12 @@ export default function LiveTvPage() {
             {/* Direct 输入区（仅 Direct tab） */}
             {activeTab === 'direct' && (
               <div className="p-4 border-b border-gray-200 dark:border-gray-800">
-                <DirectStreamInput onPlay={handleDirectPlay} recentUrls={direct.recentUrls} />
+                <DirectStreamInput
+                  onPlay={handleDirectPlay}
+                  recentUrls={direct.recentUrls}
+                  isFav={(id) => Promise.resolve(favorites.has(id))}
+                  toggleFav={handleDirectFav}
+                />
               </div>
             )}
 

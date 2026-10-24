@@ -103,7 +103,9 @@
     "direct": {
       "enterUrl": "Enter HLS stream or YouTube live URL (e.g. https://example.com/stream.m3u8)",
       "play": "Play",
-      "recentUrls": "Recent URLs"
+      "recentUrls": "Recent URLs",
+      "addFavorite": "Add to favorites",
+      "removeFavorite": "Remove from favorites"
     },
     "channelInfo": "Channel Info",
     "streamUrl": "Stream URL",
