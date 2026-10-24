@@ -355,6 +355,34 @@ export default function LiveTvPlayer({ channel, className = '', overlay }: LiveT
     }
   };
 
+  // 键盘快捷键：F 全屏，C 字幕，P 暂/播，M 静音
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // 忽略在表单控件内输入时触发的快捷键（如 input, textarea, 等）
+      if (['input', 'textarea', 'select', 'button', 'a'].includes((e.target as HTMLElement).tagName.toLowerCase())) {
+        return;
+      }
+      if (e.key.toLowerCase() === 'f' && playableUrl) {
+        e.preventDefault();
+        toggleFullscreen();
+      }
+      if (e.key.toLowerCase() === 'c' && hasSubtitles && playableUrl) {
+        e.preventDefault();
+        toggleSubtitles();
+      }
+      if (e.key.toLowerCase() === 'p' && playableUrl) {
+        e.preventDefault();
+        togglePlay();
+      }
+      if (e.key.toLowerCase() === 'm' && playableUrl) {
+        e.preventDefault();
+        toggleMute();
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [toggleFullscreen, toggleSubtitles, togglePlay, toggleMute, playableUrl, hasSubtitles]);
+
   if (!channel) {
     return (
       <div className="bg-white dark:bg-gray-900 rounded-xl p-8 text-center text-gray-500 dark:text-gray-400">
