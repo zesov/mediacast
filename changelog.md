@@ -8,6 +8,7 @@
   - `C` — toggle captions (CC)
   - `P` — toggle play/pause
   - `M` — toggle mute
+- Live TV player: click on video area to toggle play/pause
 
 ### Fixed
 

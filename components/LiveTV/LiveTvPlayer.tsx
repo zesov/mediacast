@@ -406,7 +406,7 @@ export default function LiveTvPlayer({ channel, className = '', overlay }: LiveT
       </div>
 
       {channel.type !== 'audio' ? (
-        <div className="relative">
+        <div className="relative" onClick={togglePlay}>
           <video
             ref={mediaRef as React.RefObject<HTMLVideoElement>}
             className="w-full aspect-video bg-black"
@@ -419,7 +419,7 @@ export default function LiveTvPlayer({ channel, className = '', overlay }: LiveT
           {overlay && <div className="absolute inset-0 pointer-events-none">{overlay}</div>}
         </div>
       ) : (
-        <div className="w-full aspect-video bg-black flex items-center justify-center">
+        <div className="w-full aspect-video bg-black flex items-center justify-center" onClick={togglePlay}>
           <audio
             ref={mediaRef as React.RefObject<HTMLAudioElement>}
             className="w-2/3"
