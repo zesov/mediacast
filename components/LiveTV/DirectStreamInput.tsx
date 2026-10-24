@@ -81,7 +81,7 @@ export default function DirectStreamInput({ onPlay, recentUrls, isFav, toggleFav
                     aria-label={favStates[u] ? t('direct.removeFavorite') : t('direct.addFavorite')}
                     title={favStates[u] ? t('direct.removeFavorite') : t('direct.addFavorite')}
                   >
-                    <i className="fas fa-star" style={{ fontSize: '12px', color: favStates[u] ? '#fbbf24' : 'currentColor' }} />
+                    <i className="fas fa-star" style={{ fontSize: '14px', color: favStates[u] ? '#fbbf24' : '#6b7280' }} />
                   </button>
                 )}
               </div>
