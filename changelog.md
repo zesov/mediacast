@@ -10,6 +10,8 @@
   - `M` — toggle mute
 - Spacebar toggles play/pause in Live TV player
 - Live TV player: click on video area to toggle play/pause
+- Live TV player: auto-hide control bar in fullscreen (mouse idle → hide, move → show)
+- When controls hidden in fullscreen, title bar, control bar fully collapse and video expands to full screen (h-[100vh] object-cover)
 
 ### Fixed
 

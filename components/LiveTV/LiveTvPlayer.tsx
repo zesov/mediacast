@@ -447,7 +447,9 @@ export default function LiveTvPlayer({ channel, className = '', overlay }: LiveT
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
     >
-      <div className="flex items-center justify-between px-4 py-2 bg-gray-100 dark:bg-gray-800">
+      <div className={`flex items-center justify-between px-4 py-2 bg-gray-100 dark:bg-gray-800 ${
+        isFullscreen && !controlsVisible ? 'hidden' : ''
+      }`}>
         <div className="flex items-center space-x-2">
           <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
           <span className="text-sm font-semibold text-gray-900 dark:text-white">{t("live")}</span>
