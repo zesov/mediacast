@@ -10,12 +10,14 @@ interface YoutubeLiveResult {
 const YOUTUBE_HOSTS = ['youtube.com', 'youtu.be', 'youtube-nocookie.com'];
 
 // 主頻道 ID 只出現在 metadata 區的 channelUrl（權威、唯一；gridChannelRenderer 是推薦頻道，不可用）
+// 影片頁面會用 externalChannelId
 const CHANNEL_URL_RE = /"channelUrl":"https:\/\/www\.youtube\.com\/channel\/(UC[\w-]{22})"/;
-// fallback：頁面缺 channelUrl 時用 externalId / browseId
+// fallback：影片頁面使用 externalChannelId，或頁面缺 channelUrl 時用 externalId / browseId
+const EXTERNAL_CHANNEL_ID_RE = /"externalChannelId":"(UC[\w-]{22})"/;
 const EXTERNAL_ID_RE = /"externalId":"(UC[\w-]{22})"/;
 
 function extractChannelId(html: string): string | null {
-  const m = html.match(CHANNEL_URL_RE) ?? html.match(EXTERNAL_ID_RE);
+  const m = html.match(CHANNEL_URL_RE) ?? html.match(EXTERNAL_CHANNEL_ID_RE) ?? html.match(EXTERNAL_ID_RE);
   return m ? m[1] : null;
 }
 
