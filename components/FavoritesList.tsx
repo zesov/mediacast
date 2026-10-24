@@ -8,7 +8,6 @@ import { getFavorites, removeFavorite, exportFavorites, importFavorites, type Fa
 export default function FavoritesList() {
   const t = useTranslations('home');
   const [favorites, setFavorites] = useState<FavoriteItem[]>([]);
-  const [showImport, setShowImport] = useState(false);
   const [importError, setImportError] = useState('');
   const importInputRef = useRef<HTMLInputElement>(null);
 
@@ -46,7 +45,6 @@ export default function FavoritesList() {
     try {
       const count = await importFavorites(text);
       setFavorites(await getFavorites());
-      setShowImport(false);
       setImportError('');
     } catch {
       setImportError(t('importError'));
@@ -120,41 +118,46 @@ export default function FavoritesList() {
         <h2 className="text-xl font-bold">{t('favoritesTitle')}</h2>
       </div>
 
-      {allEmpty ? (
-        <div className="px-5 py-10 text-center text-gray-500 dark:text-gray-400">
-          {t('favoritesEmpty')}
+      <div className="p-4">
+        <div className="flex justify-end gap-2 mb-4">
+          <button
+            onClick={handleExport}
+            disabled={favorites.length === 0}
+            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-md text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            {t('favoritesExport')}
+          </button>
+          <button
+            onClick={openImport}
+            className="px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-white rounded-md text-sm font-medium"
+          >
+            {t('favoritesImport')}
+          </button>
+          <input
+            ref={importInputRef}
+            type="file"
+            accept=".json"
+            onChange={handleFileImport}
+            className="hidden"
+          />
         </div>
-      ) : (
-        <div className="p-4">
-          <div className="flex justify-end gap-2 mb-4">
-            <button
-              onClick={handleExport}
-              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-md text-sm font-medium"
-            >
-              {t('favoritesExport')}
-            </button>
-            <button
-              onClick={openImport}
-              className="px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-white rounded-md text-sm font-medium"
-            >
-              {t('favoritesImport')}
-            </button>
-            <input
-              ref={importInputRef}
-              type="file"
-              accept=".json"
-              onChange={handleFileImport}
-              className="hidden"
-            />
+
+        {importError && (
+          <p className="mb-4 text-sm text-red-500">{importError}</p>
+        )}
+
+        {allEmpty ? (
+          <div className="px-5 py-10 text-center text-gray-500 dark:text-gray-400">
+            {t('favoritesEmpty')}
           </div>
-          {importError && (
-            <p className="mb-4 text-sm text-red-500">{importError}</p>
-          )}
-          {renderSection(t('podcast'), podcastFavorites, 'podcast', '/podcast')}
-          {renderSection(t('liveTV'), liveFavorites, 'live', '/live')}
-          {renderSection(t('peertube'), peertubeFavorites, 'peertube', '/peertube')}
-        </div>
-      )}
+        ) : (
+          <div>
+            {renderSection(t('podcast'), podcastFavorites, 'podcast', '/podcast')}
+            {renderSection(t('liveTV'), liveFavorites, 'live', '/live')}
+            {renderSection(t('peertube'), peertubeFavorites, 'peertube', '/peertube')}
+          </div>
+        )}
+      </div>
     </section>
   );
 }
