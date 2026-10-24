@@ -8,6 +8,7 @@
   - `C` — toggle captions (CC)
   - `P` — toggle play/pause
   - `M` — toggle mute
+- Spacebar toggles play/pause in Live TV player
 - Live TV player: click on video area to toggle play/pause
 
 ### Fixed

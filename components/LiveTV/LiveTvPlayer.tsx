@@ -355,7 +355,7 @@ export default function LiveTvPlayer({ channel, className = '', overlay }: LiveT
     }
   };
 
-  // 键盘快捷键：F 全屏，C 字幕，P 暂/播，M 静音
+  // 键盘快捷键：F 全屏，C 字幕，P/空格 暂/播，M 静音
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // 忽略在表单控件内输入时触发的快捷键（如 input, textarea, 等）
@@ -371,6 +371,10 @@ export default function LiveTvPlayer({ channel, className = '', overlay }: LiveT
         toggleSubtitles();
       }
       if (e.key.toLowerCase() === 'p' && playableUrl) {
+        e.preventDefault();
+        togglePlay();
+      }
+      if (e.key === ' ' && playableUrl) {
         e.preventDefault();
         togglePlay();
       }
