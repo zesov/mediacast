@@ -45,7 +45,10 @@ export default function LiveTvPlayer({ channel, className = '', overlay }: LiveT
   const [isMuted, setIsMuted] = useState(false);
   const [isSupported, setIsSupported] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [controlsVisible, setControlsVisible] = useState(true);
   const hasStartedRef = useRef(false);
+  const controlsHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // 直连失败后是否已兜底切到代理（每次切换频道重置）
   const fallbackUsedRef = useRef(false);
   // 字幕轨道：源含 WebVTT/CC 轨道才显示字幕按钮（源有就顯示，無就唔顯示）
@@ -355,6 +358,48 @@ export default function LiveTvPlayer({ channel, className = '', overlay }: LiveT
     }
   };
 
+  // 全屏变化监听（用于自动隐藏/显示控制栏）
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      const fullscreen = !!(
+        document.fullscreenElement ||
+        (document as any).webkitFullscreenElement
+      );
+      setIsFullscreen(fullscreen);
+      if (!fullscreen) {
+        setControlsVisible(true);
+      }
+    };
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+    };
+  }, []);
+
+  // 鼠标移动显示控制栏，全屏时自动隐藏
+  const handleMouseMove = useCallback(() => {
+    if (!isFullscreen) return;
+    setControlsVisible(true);
+    if (controlsHideTimerRef.current) {
+      clearTimeout(controlsHideTimerRef.current);
+    }
+    controlsHideTimerRef.current = setTimeout(() => {
+      setControlsVisible(false);
+    }, 3000);
+  }, [isFullscreen]);
+
+  const handleMouseLeave = useCallback(() => {
+    if (!isFullscreen) return;
+    if (controlsHideTimerRef.current) {
+      clearTimeout(controlsHideTimerRef.current);
+    }
+    controlsHideTimerRef.current = setTimeout(() => {
+      setControlsVisible(false);
+    }, 500);
+  }, [isFullscreen]);
+
   // 键盘快捷键：F 全屏，C 字幕，P/空格 暂/播，M 静音
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -397,7 +442,11 @@ export default function LiveTvPlayer({ channel, className = '', overlay }: LiveT
   }
 
   return (
-    <div className={`live-player-container bg-white dark:bg-gray-900 rounded-xl overflow-hidden ${className}`}>
+    <div
+      className={`live-player-container bg-white dark:bg-gray-900 rounded-xl overflow-hidden ${className}`}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+    >
       <div className="flex items-center justify-between px-4 py-2 bg-gray-100 dark:bg-gray-800">
         <div className="flex items-center space-x-2">
           <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
@@ -443,7 +492,11 @@ export default function LiveTvPlayer({ channel, className = '', overlay }: LiveT
         </p>
       )}
 
-      <div className="flex items-center justify-center space-x-4 px-4 py-3 bg-gray-100 dark:bg-gray-800">
+      <div
+        className={`flex items-center justify-center space-x-4 px-4 py-3 bg-gray-100 dark:bg-gray-800 ${
+          isFullscreen && !controlsVisible ? 'hidden transition-opacity duration-300 ease-in-out' : 'opacity-100 transition-opacity duration-300 ease-in-out'
+        }`}
+      >
         <button
           onClick={togglePlay}
           disabled={!playableUrl}
