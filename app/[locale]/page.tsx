@@ -3,6 +3,7 @@ import Main from "@/components/main";
 import { EpisodeProvider } from "@/app/contexts/EpisodeContext";
 import { setRequestLocale } from "next-intl/server";
 import { routing } from "@/i18n/routing";
+import { FeaturedItem, TopPodcast, Episode } from "@/app/types";
 
 interface Props {
   params: Promise<{ locale: string }>;
@@ -42,13 +43,15 @@ export default async function Home({ params }: Props) {
   setRequestLocale(locale);
 
   const query = getRandomCategory();
-  const [searchPodcastsData, trendingPodcastsData, recentEpisodesData, episodesRandomData, categoriesData] = await Promise.all([
-    client.search(query,{max:6}),
-    client.trending({ max: 8 }),
-    client.recentEpisodes({ max: 6 }),
-    client.episodesRandom({ max: 3 }),
-    client.categories(),
-  ]);
+
+  const [searchPodcastsData, trendingPodcastsData, recentEpisodesData, episodesRandomData, categoriesData] =
+    await Promise.all([
+      client.search(query, { max: 6 }).catch(() => ({ feeds: [] as TopPodcast[], status: "error", count: 0 })),
+      client.trending({ max: 8 }).catch(() => ({ feeds: [] as any, status: "error", count: 0 })),
+      client.recentEpisodes({ max: 6 }).catch(() => ({ items: [] as Episode[], status: "error", count: 0 })),
+      client.episodesRandom({ max: 3 }).catch(() => ({ episodes: [] as Episode[], status: "error", count: 0 })),
+      client.categories().catch(() => ({ feeds: [] as { name: string }[], status: "error", count: 0 })),
+    ]);
 
   const { feeds } = trendingPodcastsData; 
 
