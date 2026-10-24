@@ -20,7 +20,9 @@
     "favoritesImport": "Import",
     "favoritesImportPlaceholder": "Paste JSON data here...",
     "favoritesCancel": "Cancel",
-    "favoritesImportConfirm": "Import"
+    "favoritesImportConfirm": "Import",
+    "importError": "Failed to import favorites",
+    "importEmpty": "No data to import"
   },
   "categoryNames": {
     "history": "History",

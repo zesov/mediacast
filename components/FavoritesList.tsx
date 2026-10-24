@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { getFavorites, removeFavorite, exportFavorites, importFavorites, type FavoriteItem, type FavoriteType } from '@/lib/favoritesStore';
@@ -9,8 +9,8 @@ export default function FavoritesList() {
   const t = useTranslations('home');
   const [favorites, setFavorites] = useState<FavoriteItem[]>([]);
   const [showImport, setShowImport] = useState(false);
-  const [importText, setImportText] = useState('');
   const [importError, setImportError] = useState('');
+  const importInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     getFavorites().then(setFavorites);
@@ -34,19 +34,31 @@ export default function FavoritesList() {
     URL.revokeObjectURL(url);
   };
 
-  const handleImport = async () => {
-    if (!importText.trim()) {
+  const handleFileImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    const text = await file.text();
+    if (!text.trim()) {
       setImportError(t('importEmpty'));
       return;
     }
     try {
-      const count = await importFavorites(importText);
+      const count = await importFavorites(text);
       setFavorites(await getFavorites());
-      setImportText('');
       setShowImport(false);
       setImportError('');
     } catch {
       setImportError(t('importError'));
+    } finally {
+      // Clear input so same file can be selected again
+      if (e.target) e.target.value = '';
+    }
+  };
+
+  const openImport = () => {
+    if (importInputRef.current) {
+      importInputRef.current.click();
     }
   };
 
@@ -122,36 +134,21 @@ export default function FavoritesList() {
               {t('favoritesExport')}
             </button>
             <button
-              onClick={() => setShowImport(!showImport)}
+              onClick={openImport}
               className="px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-white rounded-md text-sm font-medium"
             >
               {t('favoritesImport')}
             </button>
+            <input
+              ref={importInputRef}
+              type="file"
+              accept=".json"
+              onChange={handleFileImport}
+              className="hidden"
+            />
           </div>
-          {showImport && (
-            <div className="mb-4">
-              <textarea
-                value={importText}
-                onChange={(e) => setImportText(e.target.value)}
-                placeholder={t('favoritesImportPlaceholder')}
-                className="w-full h-32 p-3 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-              />
-              {importError && <p className="mt-2 text-sm text-red-500">{importError}</p>}
-              <div className="mt-2 flex justify-end gap-2">
-                <button
-                  onClick={() => setShowImport(false)}
-                  className="px-3 py-1 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-white rounded-md text-sm"
-                >
-                  {t('favoritesCancel')}
-                </button>
-                <button
-                  onClick={handleImport}
-                  className="px-3 py-1 bg-indigo-600 hover:bg-indigo-500 text-white rounded-md text-sm"
-                >
-                  {t('favoritesImportConfirm')}
-                </button>
-              </div>
-            </div>
+          {importError && (
+            <p className="mb-4 text-sm text-red-500">{importError}</p>
           )}
           {renderSection(t('podcast'), podcastFavorites, 'podcast', '/podcast')}
           {renderSection(t('liveTV'), liveFavorites, 'live', '/live')}

@@ -20,7 +20,9 @@
     "favoritesImport": "导入",
     "favoritesImportPlaceholder": "在此粘贴 JSON 数据...",
     "favoritesCancel": "取消",
-    "favoritesImportConfirm": "确认导入"
+    "favoritesImportConfirm": "确认导入",
+    "importError": "导入失败",
+    "importEmpty": "无数据可导入"
   },
   "categoryNames": {
     "history": "历史",
