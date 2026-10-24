@@ -108,7 +108,7 @@ export default function LiveTvPage() {
   }, []);
   const [directUrl, setDirectUrl] = useState<string | null>(null);
   // YouTube live 用官方 iframe 播放（替代 hls.js）
-  const [youtubeEmbed, setYoutubeEmbed] = useState<{ channelId: string; embedUrl: string } | null>(null);
+  const [youtubeEmbed, setYoutubeEmbed] = useState<{ channelId?: string; videoId?: string; embedUrl: string; isLive?: boolean } | null>(null);
   const [now, setNow] = useState(() => Date.now());
 
   const requestSeqRef = useRef(0);
@@ -253,9 +253,9 @@ export default function LiveTvPage() {
         try {
           const res = await fetch(`/api/youtube/live?url=${encodeURIComponent(original.streamUrl)}`);
           if (res.ok) {
-            const data = (await res.json()) as { channelId: string; embedUrl: string };
+            const data = (await res.json()) as { channelId?: string; videoId?: string; embedUrl: string; isLive?: boolean; name?: string };
             if (data.embedUrl) {
-              setYoutubeEmbed({ channelId: data.channelId, embedUrl: data.embedUrl });
+              setYoutubeEmbed({ channelId: data.channelId, videoId: data.videoId, embedUrl: data.embedUrl, isLive: data.isLive });
               setActiveChannel(original);
               return;
             }
@@ -277,14 +277,14 @@ export default function LiveTvPage() {
         try {
           const res = await fetch(`/api/youtube/live?url=${encodeURIComponent(url)}`);
           if (res.ok) {
-            const data = (await res.json()) as { channelId: string; embedUrl: string; name: string };
+            const data = (await res.json()) as { channelId?: string; videoId?: string; embedUrl: string; isLive?: boolean; name?: string };
             if (data.embedUrl) {
-              setYoutubeEmbed({ channelId: data.channelId, embedUrl: data.embedUrl });
+              setYoutubeEmbed({ channelId: data.channelId, videoId: data.videoId, embedUrl: data.embedUrl, isLive: data.isLive });
               setDirectUrl(url);
               direct.playUrl(url);
               setActiveChannel({
-                id: 'youtube-' + data.channelId,
-                name: data.name || 'YouTube Live',
+                id: data.videoId ? 'youtube-video-' + data.videoId : 'youtube-' + (data.channelId || 'unknown'),
+                name: data.name || 'YouTube',
                 streamUrl: url,
               });
               return;

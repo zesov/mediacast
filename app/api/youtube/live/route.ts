@@ -2,9 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { assertAllowedHostname, assertPublicHttpUrl, safeFetch } from '@/lib/urlGuard';
 
 interface YoutubeLiveResult {
-  channelId: string;
+  channelId?: string;
+  videoId?: string;
   embedUrl: string;
   name: string;
+  isLive: boolean;
 }
 
 const YOUTUBE_HOSTS = ['youtube.com', 'youtu.be', 'youtube-nocookie.com'];
@@ -28,7 +30,7 @@ function extractName(html: string): string {
     html.match(/<meta property="og:title" content="([^"]+)"/) ??
     html.match(/"og:title":"([^"]+)"/) ??
     html.match(/<title>([^<]*)<\/title>/);
-  if (!m) return 'YouTube Live';
+  if (!m) return 'YouTube';
   return m[1].replace(/\s*-\s*YouTube$/, '').trim();
 }
 
@@ -41,6 +43,21 @@ export async function GET(req: NextRequest) {
   } catch {
     return NextResponse.json({ error: 'invalid url' }, { status: 400 });
   }
+
+  // 1) 先從 URL 直接提取 videoId（適用於 /watch?v=... 格式）
+  let videoId: string | null = null;
+  try {
+    const u = new URL(url);
+    videoId = u.searchParams.get('v');
+    // youtu.be/VIDEO_ID
+    if (!videoId && u.hostname === 'youtu.be') {
+      videoId = u.pathname.slice(1);
+    }
+  } catch {
+    // ignore
+  }
+
+  // 2) 拉取 HTML 獲取頻道名稱、channelId、live 狀態
   // 剝離 /live 後綴：直播頁缺 channelUrl metadata，頻道主頁才有；是否在播由 embed 自行判斷
   const normalized = url.replace(/\/live\/?$/, '');
 
@@ -48,7 +65,6 @@ export async function GET(req: NextRequest) {
     const { response: res } = await safeFetch(normalized, {
       init: {
         headers: {
-          // youtube 需要瀏覽器 UA，否則回傳 consent / 錯誤頁
           'User-Agent':
             'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
           'Accept-Language': 'en',
@@ -60,17 +76,39 @@ export async function GET(req: NextRequest) {
     }
     const html = await res.text();
     const channelId = extractChannelId(html);
-    if (!channelId) {
-      return NextResponse.json({ error: 'could not resolve channel id' }, { status: 422 });
+    const name = extractName(html);
+
+    // 檢測是否為直播：頁面含有 isLive/直播標記
+    const isLiveStream = /"isLive":true/.test(html) || /"isLiveContent":true/.test(html) || /直播中/.test(html);
+
+    // 3) 決定 embed URL
+    // - 若有 videoId 且非直播，用 video embed
+    // - 否則用 channel live_stream embed（需 channelId）
+    let embedUrl: string;
+    let isLive = false;
+
+    if (videoId && !isLiveStream) {
+      // 普通影片：用標準 video embed
+      embedUrl = `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&mute=1`;
+    } else if (channelId) {
+      // 直播或無 videoId：用頻道 live_stream embed
+      embedUrl =
+        `https://www.youtube-nocookie.com/embed/live_stream?channel=${channelId}` +
+        `&autoplay=1&mute=1`;
+      isLive = true;
+    } else if (videoId) {
+      // 有 videoId 但可能是直播影片（首播/正在直播），仍用 video embed
+      embedUrl = `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&mute=1`;
+    } else {
+      return NextResponse.json({ error: 'could not resolve embed url' }, { status: 422 });
     }
 
-    const embedUrl =
-      `https://www.youtube-nocookie.com/embed/live_stream?channel=${channelId}` +
-      `&autoplay=1&mute=1`;
     const result: YoutubeLiveResult = {
-      channelId,
+      channelId: channelId || undefined,
+      videoId: videoId || undefined,
       embedUrl,
-      name: extractName(html),
+      name,
+      isLive,
     };
     return NextResponse.json(result);
   } catch (e) {
