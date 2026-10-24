@@ -462,7 +462,9 @@ export default function LiveTvPlayer({ channel, className = '', overlay }: LiveT
         <div className="relative" onClick={togglePlay}>
           <video
             ref={mediaRef as React.RefObject<HTMLVideoElement>}
-            className="w-full aspect-video bg-black"
+            className={`w-full bg-black ${
+              isFullscreen && !controlsVisible ? 'h-[100vh] object-cover' : 'aspect-video'
+            }`}
             controls={false}
             playsInline
             onPlay={() => setIsPlaying(true)}
