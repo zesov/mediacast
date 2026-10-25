@@ -281,7 +281,7 @@ export default function LiveTvPage() {
             if (data.embedUrl) {
               setYoutubeEmbed({ channelId: data.channelId, videoId: data.videoId, embedUrl: data.embedUrl, isLive: data.isLive });
               setDirectUrl(url);
-              direct.playUrl(url);
+              direct.playUrl(url, data.name || 'YouTube');
               setActiveChannel({
                 id: data.videoId ? 'youtube-video-' + data.videoId : 'youtube-' + (data.channelId || 'unknown'),
                 name: data.name || 'YouTube',
@@ -296,7 +296,7 @@ export default function LiveTvPage() {
       }
       setYoutubeEmbed(null);
       setDirectUrl(url);
-      direct.playUrl(url);
+      direct.playUrl(url, url.split('/').pop() || 'Stream');
       setActiveChannel({
         id: 'direct-' + url,
         name: url.split('/').pop() || 'Stream',
@@ -417,7 +417,7 @@ export default function LiveTvPage() {
               <div className="p-4 border-b border-gray-200 dark:border-gray-800">
                 <DirectStreamInput
                   onPlay={handleDirectPlay}
-                  recentUrls={direct.recentUrls}
+                  recentEntries={direct.recentEntries}
                   isFav={(id) => Promise.resolve(favorites.has(id))}
                   toggleFav={handleDirectFav}
                 />

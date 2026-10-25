@@ -3,14 +3,19 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 
+interface RecentEntry {
+  url: string;
+  name?: string;
+}
+
 interface DirectStreamInputProps {
-  onPlay: (url: string) => void;
-  recentUrls: string[];
+  onPlay: (url: string, name?: string) => void;
+  recentEntries: RecentEntry[];
   isFav?: (id: string) => Promise<boolean>;
   toggleFav?: (id: string, name?: string) => Promise<void>;
 }
 
-export default function DirectStreamInput({ onPlay, recentUrls, isFav, toggleFav }: DirectStreamInputProps) {
+export default function DirectStreamInput({ onPlay, recentEntries, isFav, toggleFav }: DirectStreamInputProps) {
   const t = useTranslations('live');
   const [url, setUrl] = useState('');
   const [favStates, setFavStates] = useState<Record<string, boolean>>({});
@@ -18,12 +23,12 @@ export default function DirectStreamInput({ onPlay, recentUrls, isFav, toggleFav
   useEffect(() => {
     if (!isFav || !toggleFav) return;
     let cancelled = false;
-    recentUrls.forEach(async (u) => {
+    recentEntries.forEach(async ({ url: u }) => {
       const fav = await isFav(u);
       if (!cancelled) setFavStates((prev) => ({ ...prev, [u]: fav }));
     });
     return () => { cancelled = true; };
-  }, [recentUrls, isFav]);
+  }, [recentEntries, isFav]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,11 +55,11 @@ export default function DirectStreamInput({ onPlay, recentUrls, isFav, toggleFav
       </form>
 
       {/* Recent URLs */}
-      {recentUrls.length > 0 && (
+      {recentEntries.length > 0 && (
         <div className="space-y-2">
           <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">{t('direct.recentUrls')}</p>
           <div className="flex flex-wrap gap-2">
-            {recentUrls.map((u) => (
+            {recentEntries.map(({ url: u, name }) => (
               <div
                 key={u}
                 className="flex items-center gap-1.5 bg-gray-200 dark:bg-gray-800 rounded px-2 py-1 hover:bg-gray-300 dark:hover:bg-gray-700"
@@ -62,18 +67,18 @@ export default function DirectStreamInput({ onPlay, recentUrls, isFav, toggleFav
                 <button
                   onClick={() => {
                     setUrl(u);
-                    onPlay(u);
+                    onPlay(u, name);
                   }}
                   className="text-xs flex-1 text-left text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white truncate max-w-[200px]"
-                  title={u}
+                  title={name ?? u}
                 >
-                  {u.length > 30 ? u.slice(0, 30) + '…' : u}
+                  {name ?? (u.length > 30 ? u.slice(0, 30) + '…' : u)}
                 </button>
                 {toggleFav && isFav && (
                   <button
                     onClick={async (e) => {
                       e.stopPropagation();
-                      await toggleFav(u, u);
+                      await toggleFav(u, name);
                       const fav = await isFav(u);
                       setFavStates((prev) => ({ ...prev, [u]: fav }));
                     }}
