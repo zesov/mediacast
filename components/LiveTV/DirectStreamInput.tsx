@@ -69,7 +69,7 @@ export default function DirectStreamInput({ onPlay, recentEntries, isFav, toggle
                     setUrl(u);
                     onPlay(u, name);
                   }}
-                  className="text-xs flex-1 text-left text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white truncate max-w-[200px]"
+                  className="text-xs flex-1 text-left text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white truncate max-w-[280px]"
                   title={name ?? u}
                 >
                   {name ?? (u.length > 30 ? u.slice(0, 30) + '…' : u)}
@@ -78,8 +78,6 @@ export default function DirectStreamInput({ onPlay, recentEntries, isFav, toggle
                   <button
                     onClick={async (e) => {
                       e.stopPropagation();
-                      // Optimistic flip: toggleFav updates parent favorites state,
-                      // but isFav(u) would read stale closure value here.
                       setFavStates((prev) => ({ ...prev, [u]: !prev[u] }));
                       await toggleFav(u, name);
                     }}
