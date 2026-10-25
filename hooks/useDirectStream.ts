@@ -5,28 +5,43 @@ import { useState, useCallback } from 'react';
 const STORAGE_KEY = 'live:recentUrls';
 const MAX_RECENT = 5;
 
+interface RecentEntry {
+  url: string;
+  name?: string;
+}
+
 interface DirectStreamReturn {
   recentUrls: string[];
-  playUrl: (url: string) => void;
+  recentEntries: RecentEntry[];
+  playUrl: (url: string, name?: string) => void;
 }
 
 export function useDirectStream(): DirectStreamReturn {
-  const [recentUrls, setRecentUrls] = useState<string[]>(() => {
+  const [recentEntries, setRecentEntries] = useState<RecentEntry[]>(() => {
     if (typeof window === 'undefined') return [];
     try {
-      return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return [];
+      // 向后兼容：旧格式是纯字符串数组
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length) {
+        if (typeof parsed[0] === 'string') {
+          return parsed.map((u: string) => ({ url: u }));
+        }
+      }
+      return parsed as RecentEntry[];
     } catch {
       return [];
     }
   });
 
-  const playUrl = useCallback((url: string) => {
-    setRecentUrls((prev) => {
-      const next = [url, ...prev.filter((u) => u !== url)].slice(0, MAX_RECENT);
+  const playUrl = useCallback((url: string, name?: string) => {
+    setRecentEntries((prev) => {
+      const next: RecentEntry[] = [{ url, name }, ...prev.filter((e) => e.url !== url)].slice(0, MAX_RECENT);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
       return next;
     });
   }, []);
 
-  return { recentUrls, playUrl };
+  return { recentUrls: recentEntries.map((e) => e.url), recentEntries, playUrl };
 }
