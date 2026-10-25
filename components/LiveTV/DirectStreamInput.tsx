@@ -78,9 +78,10 @@ export default function DirectStreamInput({ onPlay, recentEntries, isFav, toggle
                   <button
                     onClick={async (e) => {
                       e.stopPropagation();
+                      // Optimistic flip: toggleFav updates parent favorites state,
+                      // but isFav(u) would read stale closure value here.
+                      setFavStates((prev) => ({ ...prev, [u]: !prev[u] }));
                       await toggleFav(u, name);
-                      const fav = await isFav(u);
-                      setFavStates((prev) => ({ ...prev, [u]: fav }));
                     }}
                     className="flex-shrink-0 p-1 text-gray-400 dark:text-gray-500 hover:text-yellow-400 dark:hover:text-yellow-300 transition-colors"
                     aria-label={favStates[u] ? t('direct.removeFavorite') : t('direct.addFavorite')}
